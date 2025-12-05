@@ -1,0 +1,327 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Card, Argument
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import Card, Argument, Source
+from .forms import CardForm, ArgumentForm, SourceForm, ArgumentFormSet
+
+
+
+def index(request):
+    """Homepage showing public cards"""
+    cards = Card.objects.filter(visibility='public').order_by('-created_at')[:10]
+    return render(request, 'cards/index.html', {'cards': cards})
+
+def card_detail(request, card_id):
+    """Detail view for a single card"""
+    card = get_object_or_404(Card, id=card_id)
+    pros = card.arguments.filter(type='pro')
+    cons = card.arguments.filter(type='con')
+    return render(request, 'cards/card_detail.html', {
+        'card': card,
+        'pros': pros,
+        'cons': cons
+    })
+
+
+
+@login_required
+def create_card(request):
+    """Create a new card"""
+    if request.method == 'POST':
+        # Create the card
+        card = Card.objects.create(
+            user=request.user,
+            topic=request.POST['topic'],
+            subcategory=request.POST['subcategory'],
+            title=request.POST['title'],
+            stance=request.POST['stance'],
+            hypothesis=request.POST['hypothesis'],
+            conclusion=request.POST['conclusion'],
+            visibility=request.POST.get('visibility', 'private')
+        )
+        
+        # Add pros
+        pro_summaries = request.POST.getlist('pro_summary[]')
+        pro_details = request.POST.getlist('pro_detail[]')
+        for i, summary in enumerate(pro_summaries):
+            if summary.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='pro',
+                    summary=summary,
+                    detail=pro_details[i] if i < len(pro_details) else '',
+                    order=i
+                )
+        
+        # Add cons
+        con_summaries = request.POST.getlist('con_summary[]')
+        con_details = request.POST.getlist('con_detail[]')
+        for i, summary in enumerate(con_summaries):
+            if summary.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='con',
+                    summary=summary,
+                    detail=con_details[i] if i < len(con_details) else '',
+                    order=i
+                )
+        
+        return redirect('card_detail', card_id=card.id)
+    
+    return render(request, 'cards/create_card.html', {
+        'topics': Card.TOPIC_CHOICES
+    })
+
+@login_required
+def create_card_with_forms(request):
+    """Create a new card using Django Forms"""
+    if request.method == 'POST':
+        form = CardForm(request.POST)
+        
+        if form.is_valid():
+            # Save the card but don't commit yet (need to set user)
+            card = form.save(commit=False)
+            card.user = request.user
+            card.save()
+            
+            # Still handle pros/cons manually since they're dynamic
+            # Add pros
+            pro_summaries = request.POST.getlist('pro_summary[]')
+            pro_details = request.POST.getlist('pro_detail[]')
+            for i, summary in enumerate(pro_summaries):
+                if summary.strip():
+                    Argument.objects.create(
+                        card=card,
+                        type='pro',
+                        summary=summary,
+                        detail=pro_details[i] if i < len(pro_details) else '',
+                        order=i
+                    )
+            
+            # Add cons
+            con_summaries = request.POST.getlist('con_summary[]')
+            con_details = request.POST.getlist('con_detail[]')
+            for i, summary in enumerate(con_summaries):
+                if summary.strip():
+                    Argument.objects.create(
+                        card=card,
+                        type='con',
+                        summary=summary,
+                        detail=con_details[i] if i < len(con_details) else '',
+                        order=i
+                    )
+            
+            messages.success(request, 'Card created successfully!')
+            return redirect('card_detail', card_id=card.id)
+    else:
+        form = CardForm()
+    
+    return render(request, 'cards/create_card_forms.html', {
+        'form': form,
+    })
+
+
+@login_required
+def edit_card_with_forms(request, card_id):
+    """Edit an existing card using Django Forms"""
+    card = get_object_or_404(Card, id=card_id)
+    
+    # Check permission
+    if card.user != request.user:
+        messages.error(request, "You don't have permission to edit this card.")
+        return redirect('card_detail', card_id=card.id)
+    
+    if request.method == 'POST':
+        form = CardForm(request.POST, instance=card)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Card updated successfully!')
+            return redirect('card_detail', card_id=card.id)
+    else:
+        form = CardForm(instance=card)
+    
+    pros = card.arguments.filter(type='pro')
+    cons = card.arguments.filter(type='con')
+    
+    return render(request, 'cards/edit_card_forms.html', {
+        'form': form,
+        'card': card,
+        'pros': pros,
+        'cons': cons,
+    })
+
+
+@login_required
+def add_argument_with_forms(request, card_id):
+    """Add an argument to a card using Django Forms"""
+    card = get_object_or_404(Card, id=card_id)
+    
+    if request.method == 'POST':
+        form = ArgumentForm(request.POST)
+        
+        if form.is_valid():
+            argument = form.save(commit=False)
+            argument.card = card
+            argument.save()
+            
+            messages.success(request, f'{argument.get_type_display()} argument added successfully!')
+            return redirect('card_detail', card_id=card.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ArgumentForm()
+    
+    return render(request, 'cards/add_argument.html', {
+        'form': form,
+        'card': card,
+    })
+
+
+@login_required
+def edit_argument_with_forms(request, argument_id):
+    """Edit an existing argument using Django Forms"""
+    argument = get_object_or_404(Argument, id=argument_id)
+    card = argument.card
+    
+    # Check permission
+    if card.user != request.user:
+        messages.error(request, "You don't have permission to edit this argument.")
+        return redirect('card_detail', card_id=card.id)
+    
+    if request.method == 'POST':
+        form = ArgumentForm(request.POST, instance=argument)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Argument updated successfully!')
+            return redirect('card_detail', card_id=card.id)
+    else:
+        form = ArgumentForm(instance=argument)
+    
+    return render(request, 'cards/edit_argument.html', {
+        'form': form,
+        'argument': argument,
+        'card': card,
+    })
+
+
+@login_required
+def delete_argument(request, argument_id):
+    """Delete an argument"""
+    argument = get_object_or_404(Argument, id=argument_id)
+    card = argument.card
+    
+    # Check permission
+    if card.user != request.user:
+        messages.error(request, "You don't have permission to delete this argument.")
+        return redirect('card_detail', card_id=card.id)
+    
+    if request.method == 'POST':
+        argument.delete()
+        messages.success(request, 'Argument deleted successfully!')
+        return redirect('card_detail', card_id=card.id)
+    
+    return render(request, 'cards/confirm_delete_argument.html', {
+        'argument': argument,
+        'card': card,
+    })
+
+
+@login_required
+def add_source_with_forms(request, argument_id):
+    """Add a source to an argument using Django Forms"""
+    argument = get_object_or_404(Argument, id=argument_id)
+    card = argument.card
+    
+    # Check permission
+    if card.user != request.user:
+        messages.error(request, "You don't have permission to add sources to this argument.")
+        return redirect('card_detail', card_id=card.id)
+    
+    if request.method == 'POST':
+        form = SourceForm(request.POST)
+        
+        if form.is_valid():
+            source = form.save(commit=False)
+            source.argument = argument
+            source.save()
+            
+            messages.success(request, 'Source added successfully!')
+            return redirect('card_detail', card_id=card.id)
+    else:
+        form = SourceForm()
+    
+    return render(request, 'cards/add_source.html', {
+        'form': form,
+        'argument': argument,
+        'card': card,
+    })
+
+
+@login_required
+def user_dashboard(request):
+    """Display user's own cards"""
+    user_cards = Card.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'cards/user_dashboard.html', {
+        'cards': user_cards,
+    })
+
+
+@login_required
+def delete_card(request, card_id):
+    """Delete a card"""
+    card = get_object_or_404(Card, id=card_id)
+    
+    # Check permission
+    if card.user != request.user:
+        messages.error(request, "You don't have permission to delete this card.")
+        return redirect('card_detail', card_id=card.id)
+    
+    if request.method == 'POST':
+        card.delete()
+        messages.success(request, 'Card deleted successfully!')
+        return redirect('user_dashboard')
+    
+    return render(request, 'cards/confirm_delete_card.html', {
+        'card': card,
+    })
+
+@login_required
+def create_card_with_formset(request):
+    """
+    Create a card with inline argument formsets.
+    This is a more advanced approach that handles multiple arguments
+    in a single form submission with built-in validation.
+    """
+    if request.method == 'POST':
+        card_form = CardForm(request.POST)
+        argument_formset = ArgumentFormSet(request.POST)
+        
+        if card_form.is_valid() and argument_formset.is_valid():
+            # Save the card
+            card = card_form.save(commit=False)
+            card.user = request.user
+            card.save()
+            
+            # Save the arguments
+            arguments = argument_formset.save(commit=False)
+            for argument in arguments:
+                argument.card = card
+                argument.save()
+            
+            messages.success(request, 'Card created successfully with all arguments!')
+            return redirect('card_detail', card_id=card.id)
+    else:
+        card_form = CardForm()
+        argument_formset = ArgumentFormSet()
+    
+    return render(request, 'cards/create_card_formset.html', {
+        'card_form': card_form,
+        'argument_formset': argument_formset,
+    })

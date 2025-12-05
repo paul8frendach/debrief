@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic_display }} - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .topic-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .topic-subtitle {
+            font-size: 16px;
+            opacity: 0.85;
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .card-item {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .card-item:hover {
+            transform: translateY(-8px);
+        }
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+        .card-meta {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .card-author {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .card-author:hover {
+            text-decoration: underline;
+        }
+        .card-stance {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-view:hover {
+            transform: translateY(-2px);
+        }
+        .empty-state {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'explore' %}" class="back-btn">← Back to Explore</a>
+        
+        <div class="header">
+            <div class="logo">DEBRIEF</div>
+            <div class="topic-title">{{ topic_display }}</div>
+            <div class="topic-subtitle">{{ cards.count }} card{{ cards.count|pluralize }} on this topic</div>
+        </div>
+
+        {% if cards %}
+            <div class="cards-grid">
+                {% for card in cards %}
+                <div class="card-item">
+                    <div class="card-title">{{ card.title }}</div>
+                    <span class="card-stance">{{ card.stance|upper }}</span>
+                    <div class="card-meta">
+                        <strong>Subcategory:</strong> {{ card.subcategory }}<br>
+                        <strong>By:</strong> <a href="{% url 'user_profile' card.user.username %}" class="card-author">{{ card.user.username }}</a><br>
+                        <strong>Created:</strong> {{ card.created_at|date:"M d, Y" }}
+                    </div>
+                    <p style="color: #4b5563; font-size: 14px; margin: 16px 0; line-height: 1.6;">
+                        {{ card.hypothesis|truncatewords:20 }}
+                    </p>
+                    <a href="{% url 'card_detail' card.id %}" class="btn-view">View Full Card</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No Cards Yet</h3>
+                <p>Be the first to create a card about {{ topic_display }}!</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

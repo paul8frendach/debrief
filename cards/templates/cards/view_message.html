@@ -1,0 +1,227 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Message - Debrief{% endblock %}
+{% block nav_messages %}active{% endblock %}
+
+{% block extra_style %}
+.inbox-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+    height: calc(100vh - 150px);
+}
+
+.inbox-sidebar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.back-btn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.back-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.message-detail {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto;
+}
+
+.message-header-detail {
+    padding-bottom: 24px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    margin-bottom: 32px;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.sender-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 24px;
+}
+
+.sender-info {
+    flex: 1;
+}
+
+.sender-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.sender-username {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.message-time-detail {
+    font-size: 13px;
+    color: #808090;
+}
+
+.message-subject-detail {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.message-body {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #d0d0e0;
+    white-space: pre-wrap;
+    margin-bottom: 32px;
+}
+
+.message-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+@media (max-width: 968px) {
+    .inbox-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    
+    .inbox-sidebar {
+        display: none;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="inbox-container">
+        <div class="inbox-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Messages</h2>
+            </div>
+            
+            <a href="{% url 'inbox' %}" class="back-btn">← Back to Inbox</a>
+        </div>
+        
+        <div class="message-detail">
+            <div class="message-header-detail">
+                <div class="message-meta">
+                    <div class="sender-avatar">{{ message.sender.username|slice:":2"|upper }}</div>
+                    <div class="sender-info">
+                        <div class="sender-name">{{ message.sender.username }}</div>
+                        <div class="sender-username">@{{ message.sender.username }}</div>
+                    </div>
+                    <div class="message-time-detail">{{ message.created_at|date:"M d, Y" }} at {{ message.created_at|time:"g:i A" }}</div>
+                </div>
+                
+                {% if message.subject %}
+                <h1 class="message-subject-detail">{{ message.subject }}</h1>
+                {% endif %}
+            </div>
+            
+            <div class="message-body">{{ message.message }}</div>
+            
+            <div class="message-actions">
+                <a href="{% url 'compose_message_to' message.sender.username %}" class="btn btn-primary">↩️ Reply</a>
+                <a href="{% url 'inbox' %}" class="btn btn-secondary">← Back to Inbox</a>
+                <form method="POST" action="{% url 'delete_message' message.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this message?')">🗑️ Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

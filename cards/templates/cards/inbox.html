@@ -1,0 +1,284 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Inbox - Debrief{% endblock %}
+{% block nav_messages %}active{% endblock %}
+
+{% block extra_style %}
+.inbox-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+    height: calc(100vh - 150px);
+}
+
+.inbox-sidebar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.unread-count {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.compose-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.compose-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.nav-links {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.nav-link {
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    color: #a0a0c0;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.nav-link.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+}
+
+.message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.message-item {
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.message-item:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.message-item.unread {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+    font-weight: 600;
+}
+
+.message-item.unread::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.message-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.message-from {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-time {
+    font-size: 11px;
+    color: #808090;
+}
+
+.message-subject {
+    font-size: 14px;
+    color: #d0d0e0;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-preview {
+    font-size: 13px;
+    color: #808090;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.inbox-main {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.empty-state {
+    text-align: center;
+    max-width: 400px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.empty-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+@media (max-width: 968px) {
+    .inbox-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    
+    .inbox-sidebar {
+        max-height: 500px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="inbox-container">
+        <div class="inbox-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Messages</h2>
+                <p class="unread-count">{{ unread_count }} unread</p>
+            </div>
+            
+            <a href="{% url 'compose_message' %}" class="compose-btn">✉️ Compose</a>
+            
+            <div class="nav-links">
+                <a href="{% url 'inbox' %}" class="nav-link active">Inbox</a>
+                <a href="{% url 'sent_messages' %}" class="nav-link">Sent</a>
+            </div>
+            
+            <div class="message-list">
+                {% for message in messages %}
+                <a href="{% url 'view_message' message.id %}" class="message-item {% if not message.is_read %}unread{% endif %}">
+                    <div class="message-header">
+                        <div class="message-avatar">{{ message.sender.username|slice:":2"|upper }}</div>
+                        <div class="message-info">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="message-from">{{ message.sender.username }}</span>
+                                <span class="message-time">{{ message.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if message.subject %}
+                    <div class="message-subject">{{ message.subject }}</div>
+                    {% endif %}
+                    <div class="message-preview">{{ message.message|truncatewords:10 }}</div>
+                </a>
+                {% empty %}
+                <div style="text-align: center; color: #808090; padding: 40px 20px;">
+                    No messages yet
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="inbox-main">
+            <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <div class="empty-title">Select a message</div>
+                <div class="empty-subtitle">Choose a message from the list to read its contents</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

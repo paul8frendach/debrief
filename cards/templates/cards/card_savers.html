@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Saved This Card - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .card-info {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .save-count {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .savers-list {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .saver-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .saver-item:last-child {
+            border-bottom: none;
+        }
+        .saver-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .saver-info {
+            flex: 1;
+        }
+        .saver-username {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .saver-username a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .saver-username a:hover {
+            text-decoration: underline;
+        }
+        .saver-time {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'card_detail' card.id %}" class="back-btn">← Back to Card</a>
+        
+        <div class="header">
+            <div class="logo">DEBRIEF</div>
+        </div>
+
+        <div class="card-info">
+            <div class="card-title">{{ card.title }}</div>
+            <div class="save-count">💾 {{ savers|length }} people saved this card</div>
+        </div>
+
+        <div class="savers-list">
+            {% if savers %}
+                {% for save in savers %}
+                <div class="saver-item">
+                    <div class="saver-avatar">{{ save.user.username|slice:":2"|upper }}</div>
+                    <div class="saver-info">
+                        <div class="saver-username">
+                            <a href="{% url 'user_profile' save.user.username %}">{{ save.user.username }}</a>
+                        </div>
+                        <div class="saver-time">Saved {{ save.saved_at|timesince }} ago</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>No saves yet</h3>
+                    <p>Be patient, people will discover your card!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

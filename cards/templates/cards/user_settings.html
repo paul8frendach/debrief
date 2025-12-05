@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .settings-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 24px;
+        }
+        .setting-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .setting-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        input[type="checkbox"] {
+            width: 48px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'user_dashboard' %}" class="back-btn">← Back to Dashboard</a>
+        
+        <div class="settings-panel">
+            <h1>⚙️ Privacy Settings</h1>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="setting-item">
+                    <div class="setting-label">Allow Direct Messages</div>
+                    <div class="setting-description">
+                        Other users can send you direct messages
+                    </div>
+                    <div class="toggle">
+                        <input type="checkbox" name="allow_messages" {% if settings.allow_messages %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">Email Notifications</div>
+                    <div class="setting-description">
+                        Receive email notifications for new messages and activity
+                    </div>
+                    <div class="toggle">
+                        <input type="checkbox" name="email_notifications" {% if settings.email_notifications %}checked{% endif %}>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Save Settings</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

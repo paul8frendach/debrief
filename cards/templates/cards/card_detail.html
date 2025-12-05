@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ card.title }} - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f23;
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .card-full {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 32px;
+        }
+        .topic-path {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .card-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        .stance-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .card-body {
+            padding: 32px;
+        }
+        .section {
+            margin-bottom: 28px;
+        }
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #667eea;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .section-content {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #d0d0e0;
+        }
+        .pros-cons {
+            display: grid;
+            gap: 20px;
+            margin-top: 28px;
+        }
+        .pro-con-box {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+        }
+        .pro-con-header {
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .pros .pro-con-header {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.3);
+        }
+        .cons .pro-con-header {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-bottom: 2px solid rgba(239, 68, 68, 0.3);
+        }
+        .point {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .point:first-of-type {
+            border-top: none;
+        }
+        .point strong {
+            display: block;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+        .point-text {
+            font-size: 14px;
+            color: #b0b0c0;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+        .source-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #667eea;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .source-link:hover {
+            color: #8b9eff;
+            text-decoration: underline;
+        }
+        .card-footer {
+            padding: 28px 32px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .meta {
+            font-size: 15px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .meta a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .meta a:hover {
+            text-decoration: underline;
+        }
+        .timestamp {
+            font-size: 13px;
+            color: #808090;
+            margin-top: 4px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Share Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            color: #a0a0c0;
+            line-height: 1;
+        }
+        .modal-close:hover {
+            color: white;
+        }
+        .share-link-group {
+            margin-bottom: 24px;
+        }
+        .share-link-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #d0d0e0;
+        }
+        .share-link-input-group {
+            display: flex;
+            gap: 8px;
+        }
+        .share-link-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+        .copy-feedback {
+            color: #34d399;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+        .copy-feedback.active {
+            display: block;
+        }
+        .social-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.2s;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+        }
+        .social-btn.twitter {
+            background: #1DA1F2;
+        }
+        .social-btn.facebook {
+            background: #1877F2;
+        }
+        .social-btn.linkedin {
+            background: #0A66C2;
+        }
+        .social-btn.email {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Cards</a>
+        
+        <div class="card-full">
+            <div class="card-header">
+                <div class="topic-path">{{ card.get_topic_display }} → {{ card.subcategory }}</div>
+                <h1 class="card-title">{{ card.title }}</h1>
+                <span class="stance-badge">{{ card.stance|upper }}</span>
+            </div>
+            
+            <div class="card-body">
+                <div class="section">
+                    <div class="section-label">Hypothesis</div>
+                    <div class="section-content">{{ card.hypothesis }}</div>
+                </div>
+                
+                <div class="pros-cons">
+                    {% if pros %}
+                    <div class="pro-con-box pros">
+                        <div class="pro-con-header">Supporting Arguments ({{ pros.count }})</div>
+                        {% for pro in pros %}
+                        <div class="point">
+                            <strong>{{ pro.summary }}</strong>
+                            {% if pro.detail %}
+                            <div class="point-text">{{ pro.detail }}</div>
+                            {% endif %}
+                            {% for source in pro.sources.all %}
+                            <a href="{{ source.url }}" target="_blank" class="source-link">
+                                📚 {{ source.title|default:source.url }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if cons %}
+                    <div class="pro-con-box cons">
+                        <div class="pro-con-header">Opposing Arguments ({{ cons.count }})</div>
+                        {% for con in cons %}
+                        <div class="point">
+                            <strong>{{ con.summary }}</strong>
+                            {% if con.detail %}
+                            <div class="point-text">{{ con.detail }}</div>
+                            {% endif %}
+                            {% for source in con.sources.all %}
+                            <a href="{{ source.url }}" target="_blank" class="source-link">
+                                📚 {{ source.title|default:source.url }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="section" style="margin-top: 28px;">
+                    <div class="section-label">Conclusion</div>
+                    <div class="section-content">{{ card.conclusion }}</div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <div class="meta">
+                    <div>Created by <a href="{% url 'user_profile' card.user.username %}">@{{ card.user.username }}</a></div>
+                    <div class="timestamp">Updated {{ card.updated_at|date:"M d, Y" }}</div>
+                </div>
+                
+                <div class="actions">
+                    {% if user.is_authenticated %}
+                        {% if card.user == user %}
+                            <a href="{% url 'edit_card_forms' card.id %}" class="btn btn-primary">✏️ Edit Card</a>
+                            <a href="{% url 'delete_card' card.id %}" class="btn btn-secondary">🗑️ Delete</a>
+                        {% else %}
+                            {% if is_saved %}
+                                <a href="{% url 'unsave_card' card.id %}" class="btn btn-secondary">✓ Saved</a>
+                            {% else %}
+                                <a href="{% url 'save_card' card.id %}" class="btn btn-primary">💾 Save Card</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                    <button onclick="openShareModal()" class="btn btn-secondary">🔗 Share Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Share this card</h2>
+                <button onclick="closeShareModal()" class="modal-close">×</button>
+            </div>
+            
+            <div class="share-link-group">
+                <label>Share Link:</label>
+                <div class="share-link-input-group">
+                    <input type="text" id="shareLink" class="share-link-input" value="{{ request.build_absolute_uri }}" readonly>
+                    <button onclick="copyShareLink()" class="btn btn-primary">Copy</button>
+                </div>
+                <div id="copyFeedback" class="copy-feedback">✓ Link copied!</div>
+            </div>
+            
+            <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #d0d0e0;">Share on social media:</label>
+            <div class="social-buttons">
+                <a href="https://twitter.com/intent/tweet?text={{ card.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" target="_blank" class="social-btn twitter">
+                    <span>𝕏</span> Twitter
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" target="_blank" class="social-btn facebook">
+                    <span>f</span> Facebook
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank" class="social-btn linkedin">
+                    <span>in</span> LinkedIn
+                </a>
+                <a href="mailto:?subject={{ card.title|urlencode }}&body=Check out this argument card: {{ request.build_absolute_uri|urlencode }}" class="social-btn email">
+                    <span>✉</span> Email
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openShareModal() {
+            document.getElementById('shareModal').classList.add('active');
+        }
+        
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+            document.getElementById('copyFeedback').classList.remove('active');
+        }
+        
+        function copyShareLink() {
+            const input = document.getElementById('shareLink');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(input.value).then(() => {
+                document.getElementById('copyFeedback').classList.add('active');
+                setTimeout(() => {
+                    document.getElementById('copyFeedback').classList.remove('active');
+                }, 2000);
+            });
+        }
+        
+        document.getElementById('shareModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShareModal();
+            }
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeShareModal();
+            }
+        });
+    </script>
+</body>
+</html>

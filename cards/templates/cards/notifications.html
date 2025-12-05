@@ -1,0 +1,228 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Notifications - Debrief{% endblock %}
+{% block nav_notifications %}active{% endblock %}
+
+{% block extra_style %}
+.notifications-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+    height: calc(100vh - 150px);
+}
+
+.notifications-sidebar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.unread-count {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.mark-all-read-btn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    color: #a0b5ff;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.mark-all-read-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item {
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.notification-item:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.notification-item.unread {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.notification-item.unread::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.notification-type {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.notification-type.follow {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.notification-type.card {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.notification-type.like {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.notification-type.comment {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.notification-time {
+    font-size: 11px;
+    color: #808090;
+}
+
+.notification-message {
+    font-size: 14px;
+    color: #d0d0e0;
+    line-height: 1.5;
+}
+
+.notifications-main {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.empty-state {
+    max-width: 400px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.empty-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+@media (max-width: 968px) {
+    .notifications-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    
+    .notifications-sidebar {
+        max-height: 500px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="notifications-container">
+        <div class="notifications-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Notifications</h2>
+                <p class="unread-count">{{ unread_count }} unread</p>
+            </div>
+            
+            {% if unread_count > 0 %}
+            <form method="POST" action="{% url 'mark_all_notifications_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="mark-all-read-btn">Mark All as Read</button>
+            </form>
+            {% endif %}
+            
+            <div class="notification-list">
+                {% for notification in notifications %}
+                <a href="{% url 'mark_notification_read' notification.id %}" class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                    <div class="notification-header">
+                        <span class="notification-type {{ notification.notification_type }}">{{ notification.get_notification_type_display }}</span>
+                        <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                    </div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                </a>
+                {% empty %}
+                <div style="text-align: center; color: #808090; padding: 40px 20px;">
+                    No notifications yet
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="notifications-main">
+            <div class="empty-state">
+                <div class="empty-icon">🔔</div>
+                <div class="empty-title">Select a notification</div>
+                <div class="empty-subtitle">Click on any notification to view details and mark it as read</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

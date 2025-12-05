@@ -1,0 +1,484 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}My Dashboard - Debrief{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_style %}
+.profile-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.profile-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    margin-bottom: 32px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 6px;
+}
+
+.profile-username {
+    font-size: 16px;
+    color: #a0a0c0;
+    margin-bottom: 16px;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 40px;
+}
+
+.profile-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #a0a0c0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.filter-bar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-weight: 700;
+    color: white;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.1);
+    color: #a0a0c0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.section-header {
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 24px;
+}
+
+.card-preview {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-preview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-preview:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.card-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.card-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.scope-federal {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.scope-state {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.badge-public {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-private {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-friends {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.preview-topic {
+    font-size: 11px;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.preview-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.preview-title a {
+    color: white;
+    text-decoration: none;
+}
+
+.preview-title a:hover {
+    color: #a0b5ff;
+}
+
+.preview-stance {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.preview-snippet {
+    font-size: 14px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.preview-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.preview-meta {
+    font-size: 12px;
+    color: #808090;
+}
+
+.preview-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #a0a0c0;
+}
+
+.preview-stats a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.preview-stats a:hover {
+    color: white;
+}
+
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.empty-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+    .profile-stats {
+        justify-content: center;
+    }
+    .profile-actions {
+        flex-direction: column;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-header">
+        <div class="profile-banner">
+            <div class="profile-avatar-large">{{ user.username|slice:":2"|upper }}</div>
+            <div class="profile-info">
+                <div class="profile-name">{{ user.username }}</div>
+                <div class="profile-username">@{{ user.username }}</div>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="stat-number">{{ total_cards }}</span>
+                        <span class="stat-label">My Cards</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="stat-number">{{ total_saves }}</span>
+                        <span class="stat-label">Total Saves</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="stat-number">{{ followers_count }}</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="stat-number">{{ following_count }}</span>
+                        <span class="stat-label">Following</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <a href="{% url 'create_card' %}" class="btn btn-primary">+ Create New Card</a>
+            <a href="{% url 'saved_cards' %}" class="btn btn-secondary">💾 Saved Cards</a>
+            <a href="{% url 'user_settings' %}" class="btn btn-secondary">⚙️ Settings</a>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <span class="filter-label">Filter by Scope:</span>
+        <a href="?scope=all" class="filter-btn {% if scope_filter == 'all' %}active{% endif %}">
+            All ({{ total_cards }})
+        </a>
+        <a href="?scope=federal" class="filter-btn {% if scope_filter == 'federal' %}active{% endif %}">
+            🏛️ Federal ({{ federal_count }})
+        </a>
+        <a href="?scope=state" class="filter-btn {% if scope_filter == 'state' %}active{% endif %}">
+            📍 State ({{ state_count }})
+        </a>
+    </div>
+
+    <div class="section-header">
+        <div class="section-title">My Argument Cards</div>
+        <div class="section-subtitle">Cards you've created</div>
+    </div>
+
+    {% if cards %}
+        <div class="card-grid">
+            {% for card in cards %}
+            <div class="card-preview">
+                <a href="{% url 'card_detail' card.id %}" class="card-link" style="text-decoration: none; color: inherit; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;"></a>
+                <div class="card-badges" style="position: relative; z-index: 2;">
+                    <span class="card-badge scope-{{ card.scope }}">
+                        {% if card.scope == 'federal' %}🏛️ Federal{% else %}📍 State{% endif %}
+                    </span>
+                    <span class="card-badge badge-{{ card.visibility }}">
+                        {% if card.visibility == 'public' %}🌍 Public
+                        {% elif card.visibility == 'friends' %}👥 Friends
+                        {% else %}🔒 Private{% endif %}
+                    </span>
+                </div>
+                
+                <div class="preview-topic" style="position: relative; z-index: 2;">{{ card.get_topic_display }}{% if card.subcategory %} → {{ card.subcategory }}{% endif %}</div>
+                <div class="preview-title" style="position: relative; z-index: 2;">
+                    {{ card.title }}
+                </div>
+                <span class="preview-stance" style="position: relative; z-index: 2;">{{ card.stance|upper }}</span>
+                <div class="preview-snippet" style="position: relative; z-index: 2;">
+                    {{ card.hypothesis|truncatewords:20 }}
+                </div>
+                <div class="preview-footer" style="position: relative; z-index: 2;">
+                    <span class="preview-meta">Created {{ card.created_at|timesince }} ago</span>
+                    <div class="preview-stats">
+                        <a href="{% url 'card_savers' card.id %}">
+                            <span>💾 {{ card.saves.count }}</span>
+                        </a>
+                        <span>📊 {{ card.arguments.count }}</span>
+                    </div>
+                </div>
+                <div class="card-actions" style="position: relative; z-index: 2;">
+                    <a href="{% url 'edit_card_forms' card.id %}" class="btn btn-secondary btn-small">Edit</a>
+                    <a href="{% url 'delete_card' card.id %}" class="btn btn-secondary btn-small">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No {% if scope_filter != 'all' %}{{ scope_filter }}{% endif %} Cards Yet</div>
+            <div class="empty-subtitle">Start building your collection of argument cards</div>
+            <a href="{% url 'create_card' %}" class="btn btn-primary">Create Your First Card</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

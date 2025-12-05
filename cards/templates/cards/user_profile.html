@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .profile-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            margin: 0 auto 20px;
+        }
+        .profile-username {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 24px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .follow-btn, .unfollow-btn {
+            padding: 12px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .follow-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .unfollow-btn {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        .follow-btn:hover, .unfollow-btn:hover {
+            transform: translateY(-2px);
+        }
+        .section-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .card-item {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .card-item:hover {
+            transform: translateY(-8px);
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+        .card-meta {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-view:hover {
+            transform: translateY(-2px);
+        }
+        .empty-state {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 32px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Home</a>
+        
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {{ profile_user.username|first|upper }}
+            </div>
+            <div class="profile-username">{{ profile_user.username }}</div>
+            
+            <div class="profile-stats">
+                <div class="stat">
+                    <div class="stat-number">{{ cards.count }}</div>
+                    <div class="stat-label">Cards</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ followers_count }}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ following_count }}</div>
+                    <div class="stat-label">Following</div>
+                </div>
+            </div>
+            
+            {% if user.is_authenticated and user != profile_user %}
+                {% if is_following %}
+                    <form method="POST" action="{% url 'unfollow_user' profile_user.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="unfollow-btn">✓ Following</button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{% url 'follow_user' profile_user.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="follow-btn">+ Follow</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <div class="section-title">Public Cards by {{ profile_user.username }}</div>
+        
+        {% if cards %}
+            <div class="cards-grid">
+                {% for card in cards %}
+                <div class="card-item">
+                    <div class="card-title">{{ card.title }}</div>
+                    <div class="card-meta">
+                        <strong>Topic:</strong> {{ card.get_topic_display }}<br>
+                        <strong>Stance:</strong> {{ card.stance }}
+                    </div>
+                    <p style="color: #4b5563; font-size: 14px; margin-bottom: 16px;">
+                        {{ card.hypothesis|truncatewords:15 }}
+                    </p>
+                    <a href="{% url 'card_detail' card.id %}" class="btn-view">View Card</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No Public Cards Yet</h3>
+                <p>{{ profile_user.username }} hasn't created any public cards yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

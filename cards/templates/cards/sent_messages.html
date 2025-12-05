@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sent Messages - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .logo {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin: 0 8px 24px 0;
+            font-weight: 600;
+        }
+        .message-list {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .message-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s;
+        }
+        .message-item:hover {
+            background: #f9fafb;
+        }
+        .message-to {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .message-subject {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .message-preview {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .message-time {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'inbox' %}" class="back-btn">← Back to Inbox</a>
+        
+        <div class="header">
+            <div class="logo">DEBRIEF</div>
+            <div style="font-size: 24px; font-weight: 700;">📤 Sent Messages</div>
+        </div>
+
+        <div class="message-list">
+            {% if messages %}
+                {% for msg in messages %}
+                <a href="{% url 'view_message' msg.id %}" class="message-item">
+                    <div class="message-to">To: {{ msg.recipient.username }}</div>
+                    {% if msg.subject %}
+                    <div class="message-subject">{{ msg.subject }}</div>
+                    {% endif %}
+                    <div class="message-preview">{{ msg.message|truncatewords:15 }}</div>
+                    <div class="message-time">Sent {{ msg.created_at|timesince }} ago</div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>No Sent Messages</h3>
+                    <p>Messages you send will appear here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

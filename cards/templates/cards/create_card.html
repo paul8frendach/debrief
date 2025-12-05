@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Card - Debrief</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .back-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .panel {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            height: fit-content;
+        }
+        .preview-panel {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid #667eea;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        label {
+            display: block;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .required {
+            color: #ef4444;
+        }
+        .scope-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .scope-option {
+            padding: 20px;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .scope-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .scope-option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .scope-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .scope-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .scope-desc {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .char-counter.warning {
+            color: #f59e0b;
+        }
+        .char-counter.danger {
+            color: #ef4444;
+        }
+        .argument-card {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 2px solid #e5e7eb;
+        }
+        .argument-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .argument-type {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .pro-type {
+            color: #10b981;
+        }
+        .con-type {
+            color: #ef4444;
+        }
+        .btn-remove {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-add {
+            background: #f3f4f6;
+            border: 2px dashed #9ca3af;
+            color: #6b7280;
+        }
+        .btn-add:hover {
+            background: #e5e7eb;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-top: 24px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Preview Styles */
+        .preview-card {
+            background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .preview-scope {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .preview-topic {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .preview-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+        .preview-section {
+            margin-bottom: 20px;
+        }
+        .preview-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .preview-text {
+            color: #374151;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .preview-arguments {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .preview-arg-section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .preview-arg-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .pros-title {
+            color: #10b981;
+        }
+        .cons-title {
+            color: #ef4444;
+        }
+        .preview-arg-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .preview-arg-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .preview-arg-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .preview-arg-summary {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+        .preview-arg-sources {
+            font-size: 11px;
+            color: #667eea;
+        }
+        .preview-visibility {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .visibility-private {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .visibility-friends {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .visibility-public {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .preview-panel {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← Back to Home</a>
+    
+    <div class="container">
+        <!-- Form Panel -->
+        <div class="panel">
+            <h1>Create Argument Card</h1>
+            
+            <form id="cardForm" method="POST">
+                {% csrf_token %}
+                
+                <!-- Scope Selection -->
+                <div class="form-group">
+                    <label>Scope <span class="required">*</span></label>
+                    <div class="scope-selector">
+                        <div class="scope-option selected" onclick="selectScope('federal')">
+                            <div class="scope-icon">🏛️</div>
+                            <div class="scope-label">Federal</div>
+                            <div class="scope-desc">National policy & law</div>
+                        </div>
+                        <div class="scope-option" onclick="selectScope('state')">
+                            <div class="scope-icon">📍</div>
+                            <div class="scope-label">State</div>
+                            <div class="scope-desc">State & local policy</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="scope" name="scope" value="federal">
+                </div>
+
+                <!-- Topic Selection -->
+                <div class="form-group">
+                    <label>Policy/Law Topic <span class="required">*</span></label>
+                    <select id="topic" name="topic" required>
+                        <option value="">Select a topic...</option>
+                    </select>
+                </div>
+
+                <!-- Card Name -->
+                <div class="form-group">
+                    <label>Card Name <span class="required">*</span></label>
+                    <input type="text" id="cardName" name="card_name" placeholder="Give your argument card a descriptive name" required>
+                </div>
+
+                <!-- Hypothesis -->
+                <div class="form-group">
+                    <label>Hypothesis <span class="required">*</span></label>
+                    <textarea id="hypothesis" name="hypothesis" maxlength="250" placeholder="State your main hypothesis or argument (max 250 characters)" required></textarea>
+                    <div class="char-counter" id="hypothesisCounter">0 / 250</div>
+                </div>
+
+                <!-- Pro Arguments -->
+                <div class="form-group">
+                    <label>Supporting Arguments (Pros)</label>
+                    <div id="prosContainer"></div>
+                    <button type="button" class="btn btn-add" onclick="addArgument('pro')">+ Add Pro Argument</button>
+                </div>
+
+                <!-- Con Arguments -->
+                <div class="form-group">
+                    <label>Opposing Arguments (Cons)</label>
+                    <div id="consContainer"></div>
+                    <button type="button" class="btn btn-add" onclick="addArgument('con')">+ Add Con Argument</button>
+                </div>
+
+                <!-- Conclusion -->
+                <div class="form-group">
+                    <label>Conclusion <span class="required">*</span></label>
+                    <textarea id="conclusion" name="conclusion" maxlength="250" placeholder="Summarize your final thoughts (max 250 characters)" required></textarea>
+                    <div class="char-counter" id="conclusionCounter">0 / 250</div>
+                </div>
+
+                <!-- Visibility -->
+                <div class="form-group">
+                    <label>Visibility <span class="required">*</span></label>
+                    <select id="visibility" name="visibility" required>
+                        <option value="private">🔒 Private - Only you can see</option>
+                        <option value="friends">👥 Friends Only - Your followers can see</option>
+                        <option value="public">🌍 Public - Everyone can see</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Argument Card</button>
+            </form>
+        </div>
+
+        <!-- Live Preview Panel -->
+        <div class="panel preview-panel">
+            <h1>Live Preview</h1>
+            <div class="preview-card">
+                <span class="preview-scope" id="previewScope">FEDERAL</span>
+                <div class="preview-topic" id="previewTopic">Select a topic</div>
+                <h2 class="preview-title" id="previewTitle">Card Name</h2>
+                
+                <div class="preview-section">
+                    <div class="preview-label">Hypothesis</div>
+                    <div class="preview-text" id="previewHypothesis">Your hypothesis will appear here...</div>
+                </div>
+
+                <div class="preview-arguments">
+                    <div class="preview-arg-section">
+                        <div class="preview-arg-title pros-title">✓ Supporting (Pros)</div>
+                        <div id="previewPros" class="empty-state">No pro arguments yet</div>
+                    </div>
+                    <div class="preview-arg-section">
+                        <div class="preview-arg-title cons-title">✗ Opposing (Cons)</div>
+                        <div id="previewCons" class="empty-state">No con arguments yet</div>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-label">Conclusion</div>
+                    <div class="preview-text" id="previewConclusion">Your conclusion will appear here...</div>
+                </div>
+
+                <span class="preview-visibility visibility-private" id="previewVisibility">🔒 Private</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Topic lists
+        const federalTopics = [
+            'Immigration Policy',
+            'Healthcare Reform',
+            'Gun Control',
+            'Abortion Rights',
+            'Climate Change Policy',
+            'Tax Policy',
+            'Social Security',
+            'Medicare/Medicaid',
+            'Foreign Policy',
+            'Military Spending',
+            'Education Funding',
+            'Infrastructure',
+            'Criminal Justice Reform',
+            'Drug Policy',
+            'Labor Laws',
+            'Minimum Wage',
+            'Trade Policy',
+            'National Security',
+            'Voting Rights',
+            'Campaign Finance'
+        ];
+
+        const stateTopics = [
+            'State Income Tax',
+            'Property Tax',
+            'Education Funding',
+            'Marijuana Legalization',
+            'Death Penalty',
+            'State Healthcare',
+            'Gun Regulations',
+            'Abortion Access',
+            'Voting Laws',
+            'Police Reform',
+            'Prison Reform',
+            'Environmental Regulations',
+            'Minimum Wage',
+            'Workers Rights',
+            'Housing Policy',
+            'Transportation',
+            'Public Safety',
+            'Zoning Laws',
+            'State Budgets',
+            'Redistricting'
+        ];
+
+        let proCount = 0;
+        let conCount = 0;
+
+        // Initialize
+        updateTopicList('federal');
+
+        function selectScope(scope) {
+            document.getElementById('scope').value = scope;
+            document.querySelectorAll('.scope-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            updateTopicList(scope);
+            updatePreview();
+        }
+
+        function updateTopicList(scope) {
+            const topics = scope === 'federal' ? federalTopics : stateTopics;
+            const select = document.getElementById('topic');
+            select.innerHTML = '<option value="">Select a topic...</option>';
+            topics.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic;
+                option.textContent = topic;
+                select.appendChild(option);
+            });
+        }
+
+        function addArgument(type) {
+            const container = type === 'pro' ? document.getElementById('prosContainer') : document.getElementById('consContainer');
+            const count = type === 'pro' ? ++proCount : ++conCount;
+            const id = `${type}-${count}`;
+            
+            const argDiv = document.createElement('div');
+            argDiv.className = 'argument-card';
+            argDiv.id = id;
+            argDiv.innerHTML = `
+                <div class="argument-header">
+                    <span class="argument-type ${type}-type">${type === 'pro' ? '✓ PRO' : '✗ CON'} Argument</span>
+                    <button type="button" class="btn-remove" onclick="removeArgument('${id}', '${type}')">Remove</button>
+                </div>
+                <input type="text" name="${type}_name[]" placeholder="Argument name/title" onkeyup="updatePreview()" data-arg-id="${id}" data-field="name" style="margin-bottom: 8px;">
+                <textarea name="${type}_summary[]" placeholder="Summary of the argument" onkeyup="updatePreview()" data-arg-id="${id}" data-field="summary" style="margin-bottom: 8px;"></textarea>
+                <input type="text" name="${type}_sources[]" placeholder="Sources (comma-separated URLs or citations)" onkeyup="updatePreview()" data-arg-id="${id}" data-field="sources">
+            `;
+            container.appendChild(argDiv);
+            updatePreview();
+        }
+
+        function removeArgument(id, type) {
+            document.getElementById(id).remove();
+            updatePreview();
+        }
+
+        function updateCharCounter(textareaId, counterId, max) {
+            const textarea = document.getElementById(textareaId);
+            const counter = document.getElementById(counterId);
+            const length = textarea.value.length;
+            counter.textContent = `${length} / ${max}`;
+            
+            counter.classList.remove('warning', 'danger');
+            if (length > max * 0.9) counter.classList.add('danger');
+            else if (length > max * 0.7) counter.classList.add('warning');
+        }
+
+        function updatePreview() {
+            // Scope
+            const scope = document.getElementById('scope').value;
+            document.getElementById('previewScope').textContent = scope.toUpperCase();
+            
+            // Topic
+            const topic = document.getElementById('topic').value || 'Select a topic';
+            document.getElementById('previewTopic').textContent = topic;
+            
+            // Card Name
+            const cardName = document.getElementById('cardName').value || 'Card Name';
+            document.getElementById('previewTitle').textContent = cardName;
+            
+            // Hypothesis
+            const hypothesis = document.getElementById('hypothesis').value || 'Your hypothesis will appear here...';
+            document.getElementById('previewHypothesis').textContent = hypothesis;
+            
+            // Conclusion
+            const conclusion = document.getElementById('conclusion').value || 'Your conclusion will appear here...';
+            document.getElementById('previewConclusion').textContent = conclusion;
+            
+            // Visibility
+            const visibility = document.getElementById('visibility').value;
+            const visibilityEl = document.getElementById('previewVisibility');
+            visibilityEl.className = `preview-visibility visibility-${visibility}`;
+            const visIcons = { private: '🔒', friends: '👥', public: '🌍' };
+            const visLabels = { private: 'Private', friends: 'Friends Only', public: 'Public' };
+            visibilityEl.textContent = `${visIcons[visibility]} ${visLabels[visibility]}`;
+            
+            // Pro Arguments
+            updateArgumentPreview('pro');
+            
+            // Con Arguments
+            updateArgumentPreview('con');
+        }
+
+        function updateArgumentPreview(type) {
+            const container = type === 'pro' ? document.getElementById('previewPros') : document.getElementById('previewCons');
+            const args = document.querySelectorAll(`#${type}sContainer .argument-card`);
+            
+            if (args.length === 0) {
+                container.innerHTML = `<div class="empty-state">No ${type} arguments yet</div>`;
+                return;
+            }
+            
+            let html = '';
+            args.forEach(arg => {
+                const id = arg.id;
+                const name = arg.querySelector('[data-field="name"]')?.value || 'Untitled';
+                const summary = arg.querySelector('[data-field="summary"]')?.value || 'No summary';
+                const sources = arg.querySelector('[data-field="sources"]')?.value || '';
+                
+                html += `
+                    <div class="preview-arg-item">
+                        <div class="preview-arg-name">${name}</div>
+                        <div class="preview-arg-summary">${summary}</div>
+                        ${sources ? `<div class="preview-arg-sources">📎 ${sources}</div>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Event listeners
+        document.getElementById('topic').addEventListener('change', updatePreview);
+        document.getElementById('cardName').addEventListener('keyup', updatePreview);
+        document.getElementById('hypothesis').addEventListener('keyup', function() {
+            updateCharCounter('hypothesis', 'hypothesisCounter', 250);
+            updatePreview();
+        });
+        document.getElementById('conclusion').addEventListener('keyup', function() {
+            updateCharCounter('conclusion', 'conclusionCounter', 250);
+            updatePreview();
+        });
+        document.getElementById('visibility').addEventListener('change', updatePreview);
+    </script>
+</body>
+</html>

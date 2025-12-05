@@ -1,0 +1,461 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Compose Message - Debrief{% endblock %}
+{% block nav_messages %}active{% endblock %}
+
+{% block extra_style %}
+.compose-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.compose-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.compose-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+.compose-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.compose-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #d0d0e0;
+    margin-bottom: 8px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: #f87171;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.form-input::placeholder {
+    color: #808090;
+}
+
+.form-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 16px;
+    min-height: 300px;
+    resize: vertical;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.char-counter {
+    font-size: 12px;
+    color: #808090;
+    text-align: right;
+    margin-top: 8px;
+}
+
+.char-counter.warning {
+    color: #fbbf24;
+}
+
+.char-counter.danger {
+    color: #f87171;
+}
+
+.recipient-search-container {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #1a1a2e;
+    border: 2px solid rgba(102, 126, 234, 0.5);
+    border-radius: 10px;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-result-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: rgba(102, 126, 234, 0.2);
+}
+
+.result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.result-info {
+    flex: 1;
+}
+
+.result-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+}
+
+.result-status {
+    font-size: 12px;
+    color: #a0a0c0;
+}
+
+.selected-recipient {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 20px;
+    color: #a0b5ff;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.remove-recipient {
+    background: none;
+    border: none;
+    color: #a0b5ff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    margin-left: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn {
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.error-message {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    padding: 16px;
+    color: #f87171;
+    margin-bottom: 24px;
+}
+
+.info-message {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    padding: 16px;
+    color: #60a5fa;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="compose-container">
+        <div class="compose-card">
+            <div class="compose-header">
+                <h1 class="compose-title">Compose Message</h1>
+                <p class="compose-subtitle">Send a message to users you follow</p>
+            </div>
+
+            <div class="info-message">
+                💡 You can only send messages to users you follow who have messages enabled
+            </div>
+
+            <form method="POST" id="composeForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label required">To:</label>
+                    <div class="recipient-search-container">
+                        <input 
+                            type="text" 
+                            id="recipientSearch" 
+                            class="form-input" 
+                            placeholder="Search for a friend..."
+                            autocomplete="off"
+                            {% if recipient_user %}value="{{ recipient_user.username }}" disabled{% endif %}
+                        >
+                        <input type="hidden" name="recipient" id="recipientInput" {% if recipient_user %}value="{{ recipient_user.username }}"{% endif %} required>
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+                    {% if recipient_user %}
+                    <div class="selected-recipient">
+                        <span>{{ recipient_user.username }}</span>
+                    </div>
+                    {% else %}
+                    <div id="selectedRecipient"></div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Subject:</label>
+                    <input 
+                        type="text" 
+                        name="subject" 
+                        class="form-input" 
+                        placeholder="Message subject (optional)"
+                        maxlength="200"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Message:</label>
+                    <textarea 
+                        name="message" 
+                        id="messageText"
+                        class="form-textarea" 
+                        placeholder="Type your message here..."
+                        maxlength="2000"
+                        required
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="charCount">0</span> / 2000 characters
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="sendBtn">Send Message</button>
+                    <a href="{% url 'inbox' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+const recipientSearch = document.getElementById('recipientSearch');
+const recipientInput = document.getElementById('recipientInput');
+const searchResults = document.getElementById('searchResults');
+const selectedRecipientDiv = document.getElementById('selectedRecipient');
+const messageText = document.getElementById('messageText');
+const charCount = document.getElementById('charCount');
+const sendBtn = document.getElementById('sendBtn');
+
+// Only enable search if not pre-filled
+{% if not recipient_user %}
+recipientSearch.addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        searchResults.classList.remove('active');
+        return;
+    }
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchFriends(query);
+    }, 300);
+});
+
+async function searchFriends(query) {
+    try {
+        const response = await fetch(`/api/search-friends/?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.friends && data.friends.length > 0) {
+            displayResults(data.friends);
+        } else {
+            searchResults.innerHTML = '<div style="padding: 16px; text-align: center; color: #808090;">No friends found</div>';
+            searchResults.classList.add('active');
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
+
+function displayResults(friends) {
+    searchResults.innerHTML = friends.map(friend => `
+        <div class="search-result-item" onclick="selectRecipient('${friend.username}', ${friend.allows_messages})">
+            <div class="result-avatar">${friend.username.substring(0, 2).toUpperCase()}</div>
+            <div class="result-info">
+                <div class="result-name">${friend.username}</div>
+                <div class="result-status">${friend.allows_messages ? '✓ Messages enabled' : '✗ Messages disabled'}</div>
+            </div>
+        </div>
+    `).join('');
+    searchResults.classList.add('active');
+}
+
+function selectRecipient(username, allowsMessages) {
+    if (!allowsMessages) {
+        alert('This user has disabled direct messages.');
+        return;
+    }
+    
+    recipientInput.value = username;
+    recipientSearch.value = username;
+    searchResults.classList.remove('active');
+    
+    selectedRecipientDiv.innerHTML = `
+        <div class="selected-recipient">
+            <span>${username}</span>
+            <button type="button" class="remove-recipient" onclick="clearRecipient()">×</button>
+        </div>
+    `;
+    
+    updateSendButton();
+}
+
+function clearRecipient() {
+    recipientInput.value = '';
+    recipientSearch.value = '';
+    selectedRecipientDiv.innerHTML = '';
+    updateSendButton();
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!recipientSearch.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.remove('active');
+    }
+});
+{% endif %}
+
+// Character counter
+messageText.addEventListener('input', function() {
+    const length = this.value.length;
+    charCount.textContent = length;
+    
+    const counter = charCount.parentElement;
+    if (length > 1800) {
+        counter.classList.add('warning');
+    } else {
+        counter.classList.remove('warning');
+    }
+    
+    if (length >= 2000) {
+        counter.classList.add('danger');
+    } else {
+        counter.classList.remove('danger');
+    }
+    
+    updateSendButton();
+});
+
+function updateSendButton() {
+    const hasRecipient = recipientInput.value.trim() !== '';
+    const hasMessage = messageText.value.trim() !== '';
+    sendBtn.disabled = !hasRecipient || !hasMessage;
+}
+
+// Initial check
+updateSendButton();
+</script>
+{% endblock %}
