@@ -201,13 +201,24 @@
             
             <div class="notification-list">
                 {% for notification in notifications %}
+                {% if notification.notification_type == 'follow' and 'friend request' in notification.message|lower %}
+                <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                {% else %}
                 <a href="{% url 'mark_notification_read' notification.id %}" class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                {% endif %}
                     <div class="notification-header">
                         <span class="notification-type {{ notification.notification_type }}">{{ notification.get_notification_type_display }}</span>
                         <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
                     </div>
                     <div class="notification-message">{{ notification.message }}</div>
+                    {% if notification.notification_type == 'follow' and 'friend request' in notification.message|lower %}
+                        <div style="margin-top: 12px; display: flex; gap: 8px;">
+                            <a href="{% url 'friend_requests' %}" style="padding: 6px 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">View Requests</a>
+                        </div>
+                    </div>
+                    {% else %}
                 </a>
+                    {% endif %}
                 {% empty %}
                 <div style="text-align: center; color: #808090; padding: 40px 20px;">
                     No notifications yet

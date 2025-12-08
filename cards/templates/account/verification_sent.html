@@ -1,0 +1,84 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Verify Your Email - Debrief{% endblock %}
+
+{% block extra_style %}
+.verify-container {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.verify-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.verify-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.verify-text {
+    font-size: 16px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.verify-email {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.verify-note {
+    font-size: 14px;
+    color: #808090;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.resend-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 600;
+    margin-top: 16px;
+    transition: all 0.2s;
+}
+
+.resend-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="verify-container">
+        <div class="verify-icon">📧</div>
+        <h1 class="verify-title">Verify Your Email</h1>
+        <p class="verify-text">
+            We've sent a verification email to:<br>
+            <span class="verify-email">{{ email }}</span>
+        </p>
+        <p class="verify-text">
+            Please click the link in the email to verify your account and start creating argument cards on Debrief.
+        </p>
+        <div class="verify-note">
+            <p>Didn't receive the email? Check your spam folder or:</p>
+            <a href="{% url 'account_email' %}" class="resend-btn">Resend Verification Email</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

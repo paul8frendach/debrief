@@ -388,15 +388,53 @@
                             <a href="{% url 'delete_card' card.id %}" class="btn btn-secondary">🗑️ Delete</a>
                         {% else %}
                             {% if is_saved %}
-                                <a href="{% url 'unsave_card' card.id %}" class="btn btn-secondary">✓ Saved</a>
+                                <button onclick="openSaveModal()" class="btn btn-secondary">✓ Saved - Change Visibility</button>
                             {% else %}
-                                <a href="{% url 'save_card' card.id %}" class="btn btn-primary">💾 Save Card</a>
+                                <button onclick="openSaveModal()" class="btn btn-primary">💾 Save Card</button>
                             {% endif %}
                         {% endif %}
                     {% endif %}
                     <button onclick="openShareModal()" class="btn btn-secondary">🔗 Share Card</button>
+                    {% if user.is_authenticated %}
+                    <button onclick="openMessageShareModal()" class="btn btn-secondary">💬 Share via Message</button>
+                    {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+
+
+    <!-- Save Modal -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Save Card</h2>
+                <button onclick="closeSaveModal()" class="modal-close">×</button>
+            </div>
+            
+            <form method="POST" action="{% url 'save_card' card.id %}">
+                {% csrf_token %}
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #d0d0e0;">Choose visibility:</label>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: center; padding: 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="visibility" value="public" checked style="margin-right: 12px; width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: 600; color: white; margin-bottom: 4px;">🌍 Public</div>
+                                <div style="font-size: 13px; color: #a0a0c0;">Show on your profile - everyone can see</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="visibility" value="private" style="margin-right: 12px; width: 20px; height: 20px;">
+                            <div>
+                                <div style="font-weight: 600; color: white; margin-bottom: 4px;">🔒 Private Vault</div>
+                                <div style="font-size: 13px; color: #a0a0c0;">Only you can see - hidden from profile</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Card</button>
+            </form>
         </div>
     </div>
 
@@ -436,6 +474,21 @@
     </div>
     
     <script>
+
+        function openSaveModal() {
+            document.getElementById('saveModal').classList.add('active');
+        }
+        
+        function closeSaveModal() {
+            document.getElementById('saveModal').classList.remove('active');
+        }
+        
+        document.getElementById('saveModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSaveModal();
+            }
+        });
+        
         function openShareModal() {
             document.getElementById('shareModal').classList.add('active');
         }
@@ -467,6 +520,185 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeShareModal();
+            }
+        });
+    </script>
+
+    <!-- Message Share Modal -->
+    <div id="messageShareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Share Card via Message</h2>
+                <button onclick="closeMessageShareModal()" class="modal-close">×</button>
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <p style="color: #a0a0c0; margin-bottom: 16px;">Share this card with another user to start a discussion</p>
+                
+                <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+                    <div style="font-size: 12px; color: #a0a0c0; margin-bottom: 8px;">Sharing:</div>
+                    <div style="font-weight: 600; color: white;">{{ card.title }}</div>
+                </div>
+                
+                <form method="POST" action="{% url 'share_card_message' card.id %}" id="shareCardForm">
+                    {% csrf_token %}
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #d0d0e0;">To:</label>
+                        <div class="recipient-search-container">
+                            <input 
+                                type="text" 
+                                id="shareRecipientSearch" 
+                                class="form-input" 
+                                placeholder="Search for a friend..."
+                                autocomplete="off"
+                                style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white;"
+                            >
+                            <input type="hidden" name="recipient" id="shareRecipientInput" required>
+                            <div class="search-results" id="shareSearchResults" style="position: absolute; width: 100%; background: #1a1a2e; border: 2px solid rgba(102, 126, 234, 0.5); border-radius: 10px; margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 10; display: none;"></div>
+                        </div>
+                        <div id="shareSelectedRecipient"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #d0d0e0;">Message:</label>
+                        <textarea 
+                            name="message" 
+                            id="shareMessageText"
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; min-height: 120px; resize: vertical; font-family: inherit;"
+                            placeholder="Add a message about why you're sharing this card..."
+                            maxlength="2000"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="shareSendBtn" style="width: 100%;" disabled>Send Card</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.08);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .search-results.active {
+            display: block !important;
+        }
+    </style>
+
+    <script>
+        let shareSearchTimeout;
+        const shareRecipientSearch = document.getElementById('shareRecipientSearch');
+        const shareRecipientInput = document.getElementById('shareRecipientInput');
+        const shareSearchResults = document.getElementById('shareSearchResults');
+        const shareSelectedRecipientDiv = document.getElementById('shareSelectedRecipient');
+        const shareMessageText = document.getElementById('shareMessageText');
+        const shareSendBtn = document.getElementById('shareSendBtn');
+        
+        function openMessageShareModal() {
+            document.getElementById('messageShareModal').classList.add('active');
+        }
+        
+        function closeMessageShareModal() {
+            document.getElementById('messageShareModal').classList.remove('active');
+            shareRecipientSearch.value = '';
+            shareRecipientInput.value = '';
+            shareSelectedRecipientDiv.innerHTML = '';
+            shareMessageText.value = '';
+            shareSearchResults.classList.remove('active');
+        }
+        
+        shareRecipientSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                shareSearchResults.classList.remove('active');
+                return;
+            }
+            
+            clearTimeout(shareSearchTimeout);
+            shareSearchTimeout = setTimeout(() => {
+                searchShareFriends(query);
+            }, 300);
+        });
+        
+        async function searchShareFriends(query) {
+            try {
+                const response = await fetch(`/api/search-friends/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.friends && data.friends.length > 0) {
+                    displayShareResults(data.friends);
+                } else {
+                    shareSearchResults.innerHTML = '<div style="padding: 16px; text-align: center; color: #808090;">No friends found</div>';
+                    shareSearchResults.classList.add('active');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
+        
+        function displayShareResults(friends) {
+            shareSearchResults.innerHTML = friends.map(friend => `
+                <div class="search-result-item" onclick="selectShareRecipient('${friend.username}', ${friend.allows_messages})" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">${friend.username.substring(0, 2).toUpperCase()}</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 15px; font-weight: 600; color: white;">${friend.username}</div>
+                        <div style="font-size: 12px; color: #a0a0c0;">${friend.allows_messages ? '✓ Messages enabled' : '✗ Messages disabled'}</div>
+                    </div>
+                </div>
+            `).join('');
+            shareSearchResults.classList.add('active');
+        }
+        
+        function selectShareRecipient(username, allowsMessages) {
+            if (!allowsMessages) {
+                alert('This user has disabled direct messages.');
+                return;
+            }
+            
+            shareRecipientInput.value = username;
+            shareRecipientSearch.value = username;
+            shareSearchResults.classList.remove('active');
+            
+            shareSelectedRecipientDiv.innerHTML = `
+                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 20px; color: #a0b5ff; font-size: 14px; margin-top: 8px;">
+                    <span>${username}</span>
+                    <button type="button" onclick="clearShareRecipient()" style="background: none; border: none; color: #a0b5ff; cursor: pointer; font-size: 16px; padding: 0; margin-left: 4px;">×</button>
+                </div>
+            `;
+            
+            updateShareSendButton();
+        }
+        
+        function clearShareRecipient() {
+            shareRecipientInput.value = '';
+            shareRecipientSearch.value = '';
+            shareSelectedRecipientDiv.innerHTML = '';
+            updateShareSendButton();
+        }
+        
+        shareMessageText.addEventListener('input', updateShareSendButton);
+        
+        function updateShareSendButton() {
+            const hasRecipient = shareRecipientInput.value.trim() !== '';
+            const hasMessage = shareMessageText.value.trim() !== '';
+            shareSendBtn.disabled = !hasRecipient || !hasMessage;
+        }
+        
+        document.getElementById('messageShareModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMessageShareModal();
             }
         });
     </script>

@@ -163,11 +163,15 @@
             {% if user.is_authenticated %}
             <a href="{% url 'friends_feed' %}" class="nav-tab {% block nav_friends %}{% endblock %}">Friends</a>
             <a href="{% url 'user_dashboard' %}" class="nav-tab {% block nav_dashboard %}{% endblock %}">My Profile</a>
+            <a href="{% url 'friend_requests' %}" class="nav-tab" style="position: relative;">
+                👥
+                <span class="notification-badge" id="friendRequestBadge">0</span>
+            </a>
             <a href="{% url 'notifications' %}" class="nav-tab {% block nav_notifications %}{% endblock %}" style="position: relative;">
                 🔔
                 <span class="notification-badge" id="notificationBadge">0</span>
             </a>
-            <a href="{% url 'inbox' %}" class="nav-tab {% block nav_messages %}{% endblock %}" style="position: relative;">
+            <a href="{% url 'conversations_list' %}" class="nav-tab {% block nav_messages %}{% endblock %}" style="position: relative;">
                 💬
                 <span class="notification-badge" id="messageBadge">0</span>
             </a>
@@ -225,10 +229,29 @@
             }
         }
 
+        async function updateFriendRequestCount() {
+            try {
+                const response = await fetch('/api/friend-request-count/');
+                const data = await response.json();
+                const badge = document.getElementById('friendRequestBadge');
+                
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.classList.add('active');
+                } else {
+                    badge.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
         updateNotificationCount();
         updateMessageCount();
+        updateFriendRequestCount();
         setInterval(updateNotificationCount, 30000);
         setInterval(updateMessageCount, 30000);
+        setInterval(updateFriendRequestCount, 30000);
     </script>
     {% endif %}
 

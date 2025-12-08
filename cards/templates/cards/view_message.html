@@ -213,6 +213,23 @@
             
             <div class="message-body">{{ message.message }}</div>
             
+            {% if message.card %}
+            <div style="background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 16px; padding: 24px; margin-top: 24px;">
+                <div style="font-size: 12px; color: #a0a0c0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">📎 Shared Card</div>
+                <div style="margin-bottom: 12px;">
+                    <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        {% if message.card.scope == 'federal' %}🏛️ Federal{% else %}📍 State{% endif %}
+                    </span>
+                </div>
+                <h3 style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 8px;">{{ message.card.title }}</h3>
+                <p style="font-size: 14px; color: #b0b0c0; line-height: 1.6; margin-bottom: 16px;">{{ message.card.hypothesis|truncatewords:30 }}</p>
+                <div style="display: flex; gap: 12px;">
+                    <a href="{% url 'card_detail' message.card.id %}" class="btn btn-primary">View Card</a>
+                    <a href="{% url 'compose_message_to' message.sender.username %}" class="btn btn-secondary">Reply About Card</a>
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="message-actions">
                 <a href="{% url 'compose_message_to' message.sender.username %}" class="btn btn-primary">↩️ Reply</a>
                 <a href="{% url 'inbox' %}" class="btn btn-secondary">← Back to Inbox</a>

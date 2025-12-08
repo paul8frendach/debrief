@@ -211,7 +211,10 @@
 {% block content %}
 <div class="container">
     <div class="feed-header">
-        <h1 class="feed-title">Friends Feed</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h1 class="feed-title" style="margin: 0;">Friends Feed</h1>
+            <a href="{% url 'find_friends' %}" class="btn" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">+ Find Friends</a>
+        </div>
         <p class="feed-subtitle">Cards from {{ following_count }} people you follow</p>
     </div>
 

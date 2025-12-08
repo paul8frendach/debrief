@@ -1,253 +1,212 @@
+{% extends 'cards/base.html' %}
+{% load account %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Debrief</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            max-width: 450px;
-            width: 100%;
-        }
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 32px;
-        }
-        .logo {
-            font-size: 56px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            margin-bottom: 12px;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        .tagline {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        .panel {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        h1 {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1a1a2e;
-            margin-bottom: 8px;
-        }
-        .subtitle {
-            color: #6b7280;
-            margin-bottom: 32px;
-            font-size: 14px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-        }
-        .checkbox-group label {
-            margin: 0;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-top: 8px;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-        }
-        .divider {
-            text-align: center;
-            margin: 24px 0;
-            position: relative;
-        }
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e5e7eb;
-        }
-        .divider span {
-            background: white;
-            padding: 0 16px;
-            position: relative;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .link-text {
-            text-align: center;
-            margin-top: 24px;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .link-text a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .link-text a:hover {
-            text-decoration: underline;
-        }
-        .back-link {
-            display: inline-block;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 24px;
-            font-weight: 600;
-            opacity: 0.9;
-        }
-        .back-link:hover {
-            opacity: 1;
-        }
-        .messages {
-            margin-bottom: 20px;
-        }
-        .message {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-        .message.error {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
-        }
-        .message.success {
-            background: #d1fae5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-        }
-        .errorlist {
-            list-style: none;
-            padding: 0;
-            margin: 8px 0 0 0;
-        }
-        .errorlist li {
-            color: #dc2626;
-            font-size: 13px;
-            margin-top: 4px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="/" class="back-link">← Back to Home</a>
-        
-        <div class="header">
-            <div class="logo">DEBRIEF</div>
-            <div class="tagline">Organize Your Arguments</div>
+{% block title %}Sign In - Debrief{% endblock %}
+
+{% block extra_style %}
+.auth-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-box {
+    max-width: 480px;
+    width: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 48px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.auth-logo-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.auth-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e0e0;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.form-checkbox input {
+    width: 18px;
+    height: 18px;
+}
+
+.form-checkbox label {
+    font-size: 14px;
+    color: #b0b0c0;
+}
+
+.auth-button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.auth-divider {
+    text-align: center;
+    margin: 24px 0;
+    color: #808090;
+    font-size: 14px;
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: #b0b0c0;
+}
+
+.auth-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-link a:hover {
+    color: #a0b5ff;
+}
+
+.error-message {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    color: #fca5a5;
+    font-size: 14px;
+}
+
+.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.errorlist li {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    color: #fca5a5;
+    font-size: 13px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-logo">
+            <div class="auth-logo-icon">💬</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to continue to Debrief</p>
         </div>
 
-        <div class="panel">
-            <h1>Welcome Back</h1>
-            <p class="subtitle">Log in to continue to your account</p>
-
-            {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                <div class="message {{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <form method="POST" action="{% url 'account_login' %}">
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label for="id_login">Username or Email</label>
-                    <input type="text" name="login" id="id_login" placeholder="Enter your username or email" required autofocus>
-                    {{ form.login.errors }}
-                </div>
-
-                <div class="form-group">
-                    <label for="id_password">Password</label>
-                    <input type="password" name="password" id="id_password" placeholder="Enter your password" required>
-                    {{ form.password.errors }}
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="remember" id="id_remember">
-                        <label for="id_remember">Remember me</label>
-                    </div>
-                </div>
-
-                {% if redirect_field_value %}
-                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-                {% endif %}
-
-                <button type="submit" class="btn-primary">Log In</button>
-            </form>
-
-            <div class="link-text" style="margin-top: 16px;">
-                <a href="{% url 'account_reset_password' %}">Forgot your password?</a>
-            </div>
-
-            <div class="divider">
-                <span>Don't have an account?</span>
-            </div>
-
-            <div class="link-text">
-                <a href="{% url 'account_signup' %}">Sign up for free</a>
-            </div>
+        {% if form.non_field_errors %}
+        <div class="error-message">
+            {{ form.non_field_errors }}
         </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="id_login">Username or Email</label>
+                {{ form.login.errors }}
+                <input type="text" name="login" class="form-input" placeholder="Enter your username or email" required id="id_login" value="{{ form.login.value|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_password">Password</label>
+                {{ form.password.errors }}
+                <input type="password" name="password" class="form-input" placeholder="Enter your password" required id="id_password">
+            </div>
+
+            <div class="form-checkbox">
+                <input type="checkbox" name="remember" id="id_remember">
+                <label for="id_remember">Remember me</label>
+            </div>
+
+            <button type="submit" class="auth-button">Sign In</button>
+
+            <div class="auth-link">
+                <a href="{% url 'account_reset_password' %}">Forgot password?</a>
+            </div>
+
+            <div class="auth-divider">
+                Don't have an account? <a href="{% url 'account_signup' %}">Sign up</a>
+            </div>
+        </form>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

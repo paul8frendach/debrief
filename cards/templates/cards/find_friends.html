@@ -1,0 +1,238 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Find Friends - Debrief{% endblock %}
+
+{% block extra_style %}
+.find-friends-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.search-bar {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 16px;
+}
+
+.search-input::placeholder {
+    color: #a0a0c0;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.user-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.user-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.user-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.5);
+    border-color: rgba(102, 126, 234, 0.8);
+    background: linear-gradient(135deg, #1f1f3a 0%, #1a2647 100%);
+}
+
+.user-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 auto 16px;
+}
+
+.user-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.add-friend-btn {
+    margin-top: 16px;
+}
+
+.user-stats {
+    font-size: 13px;
+    color: #a0a0c0;
+    margin-bottom: 16px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.empty-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+@media (max-width: 768px) {
+    .user-grid {
+        grid-template-columns: 1fr;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="find-friends-header">
+        <div class="header-content">
+            <div>
+                <h1 class="page-title">👥 Find Friends</h1>
+                <p class="page-subtitle">Discover and connect with other Debrief users</p>
+            </div>
+        </div>
+        
+        <form method="GET" class="search-bar">
+            <input 
+                type="text" 
+                name="q" 
+                class="search-input" 
+                placeholder="Search for users by username..." 
+                value="{{ search_query }}"
+                autofocus
+            >
+        </form>
+    </div>
+
+    {% if users %}
+    <div class="user-grid">
+        {% for user_obj in users %}
+        <a href="{% url 'user_profile' user_obj.username %}" class="user-card-link">
+            <div class="user-card">
+                <div class="user-avatar-large">{{ user_obj.username|slice:":2"|upper }}</div>
+                <div class="user-name">{{ user_obj.username }}</div>
+                <div class="user-stats">
+                    {% if user_obj.card_count %}
+                        {{ user_obj.card_count }} card{{ user_obj.card_count|pluralize }}
+                    {% else %}
+                        New member
+                    {% endif %}
+                </div>
+                <div class="add-friend-btn" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('friendForm{{ user_obj.id }}').submit();">
+                    <span class="btn btn-primary">+ Add Friend</span>
+                </div>
+                <form method="POST" action="{% url 'send_friend_request' user_obj.id %}" id="friendForm{{ user_obj.id }}" style="display: none;">
+                    {% csrf_token %}
+                </form>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">
+            {% if search_query %}
+                No users found matching "{{ search_query }}"
+            {% else %}
+                No users to show
+            {% endif %}
+        </div>
+        <div class="empty-subtitle">
+            {% if search_query %}
+                Try a different search term
+            {% else %}
+                You're already friends with everyone!
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

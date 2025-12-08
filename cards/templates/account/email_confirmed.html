@@ -1,0 +1,64 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Email Verified - Debrief{% endblock %}
+
+{% block extra_style %}
+.success-container {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.success-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.success-text {
+    font-size: 16px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.success-btn {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.success-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="success-container">
+        <div class="success-icon">✅</div>
+        <h1 class="success-title">Email Verified!</h1>
+        <p class="success-text">
+            Your email has been successfully verified. You can now create argument cards and participate fully on Debrief!
+        </p>
+        <a href="{% url 'create_card' %}" class="success-btn">Create Your First Card →</a>
+    </div>
+</div>
+{% endblock %}

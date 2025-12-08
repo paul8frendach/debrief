@@ -129,6 +129,30 @@ class Follow(models.Model):
         return f"{self.follower.username} follows {self.following.username}"
 
 
+
+
+class FriendRequest(models.Model):
+    """Friend requests between users"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
+
+
 class Notification(models.Model):
     """User notifications for follows, comments, etc."""
     NOTIFICATION_TYPES = [
@@ -155,8 +179,14 @@ class Notification(models.Model):
 
 class SavedCard(models.Model):
     """Users can save/bookmark cards"""
+    VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_cards')
     card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='saves')
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
     saved_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -172,22 +202,63 @@ class UserSettings(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
     allow_messages = models.BooleanField(default=True)
     email_notifications = models.BooleanField(default=True)
+    email_on_friend_request = models.BooleanField(default=True)
+    email_on_friend_card = models.BooleanField(default=True)
+    email_on_message = models.BooleanField(default=True)
     
     def __str__(self):
         return f"{self.user.username}'s settings"
 
 
+
+
+class Conversation(models.Model):
+    """A conversation thread between two users, optionally about a specific card"""
+    participant1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_as_p1')
+    participant2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_as_p2')
+    card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True, blank=True, related_name='conversations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+        # Ensure unique conversation per card between two users
+        unique_together = [['participant1', 'participant2', 'card']]
+    
+    def __str__(self):
+        card_info = f" about {self.card.title}" if self.card else ""
+        return f"{self.participant1.username} & {self.participant2.username}{card_info}"
+    
+    def get_other_participant(self, user):
+        """Get the other participant in the conversation"""
+        return self.participant2 if user == self.participant1 else self.participant1
+    
+    def get_last_message(self):
+        """Get the most recent message in this conversation"""
+        return self.messages.order_by('-created_at').first()
+    
+    def unread_count_for_user(self, user):
+        """Get count of unread messages for a specific user"""
+        return self.messages.filter(recipient=user, is_read=False).count()
+
+
 class DirectMessage(models.Model):
-    """Direct messages between users"""
+    """Individual messages within a conversation"""
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    subject = models.CharField(max_length=200, blank=True)
     message = models.TextField(max_length=2000)
     is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['created_at']
     
     def __str__(self):
-        return f"From {self.sender.username} to {self.recipient.username}"
+        return f"{self.sender.username}: {self.message[:50]}"
+    
+    def get_status(self):
+        if self.is_read and self.read_at:
+            return 'seen'
+        return 'delivered' 

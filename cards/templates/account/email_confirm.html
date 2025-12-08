@@ -1,0 +1,67 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Confirm Email - Debrief{% endblock %}
+
+{% block extra_style %}
+.confirm-container {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.confirm-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.confirm-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.confirm-text {
+    font-size: 16px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.confirm-btn {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.confirm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirm-container">
+        <div class="confirm-icon">✉️</div>
+        <h1 class="confirm-title">Confirm Your Email</h1>
+        <p class="confirm-text">
+            Please confirm that {{ email }} is your email address.
+        </p>
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="confirm-btn">Confirm Email Address</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

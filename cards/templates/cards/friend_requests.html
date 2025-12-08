@@ -1,0 +1,243 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Friend Requests - Debrief{% endblock %}
+
+{% block extra_style %}
+.requests-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.request-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.request-count {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.request-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.request-item:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.request-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.user-name a {
+    color: white;
+    text-decoration: none;
+}
+
+.user-name a:hover {
+    color: #a0b5ff;
+}
+
+.request-time {
+    font-size: 12px;
+    color: #808090;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-accept {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-accept:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-reject {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-reject:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.btn-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    cursor: default;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #808090;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+@media (max-width: 968px) {
+    .requests-container {
+        grid-template-columns: 1fr;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 28px; font-weight: 800; color: white; margin-bottom: 4px;">Friend Requests</h1>
+            <p style="font-size: 14px; color: #a0a0c0;">Manage your incoming and outgoing friend requests</p>
+        </div>
+        <a href="{% url 'find_friends' %}" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap;">+ Find Friends</a>
+    </div>
+    
+    <div class="requests-container">
+        <!-- Incoming Requests -->
+        <div class="request-section">
+            <h2 class="section-title">
+                📥 Incoming Requests
+                <span class="request-count">{{ incoming_requests|length }}</span>
+            </h2>
+            
+            {% if incoming_requests %}
+                {% for request in incoming_requests %}
+                <div class="request-item">
+                    <div class="request-header">
+                        <div class="user-avatar">{{ request.from_user.username|slice:":2"|upper }}</div>
+                        <div class="user-info">
+                            <div class="user-name">
+                                <a href="{% url 'user_profile' request.from_user.username %}">{{ request.from_user.username }}</a>
+                            </div>
+                            <div class="request-time">{{ request.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    <div class="request-actions">
+                        <form method="POST" action="{% url 'accept_friend_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-accept">✓ Accept</button>
+                        </form>
+                        <form method="POST" action="{% url 'reject_friend_request' request.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-reject">✗ Decline</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <p>No pending friend requests</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Outgoing Requests -->
+        <div class="request-section">
+            <h2 class="section-title">
+                📤 Sent Requests
+                <span class="request-count">{{ outgoing_requests|length }}</span>
+            </h2>
+            
+            {% if outgoing_requests %}
+                {% for request in outgoing_requests %}
+                <div class="request-item">
+                    <div class="request-header">
+                        <div class="user-avatar">{{ request.to_user.username|slice:":2"|upper }}</div>
+                        <div class="user-info">
+                            <div class="user-name">
+                                <a href="{% url 'user_profile' request.to_user.username %}">{{ request.to_user.username }}</a>
+                            </div>
+                            <div class="request-time">Sent {{ request.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    <div class="request-actions">
+                        <span class="btn btn-pending">⏳ Pending</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📨</div>
+                    <p>No pending sent requests</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

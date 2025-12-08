@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from cards import messaging_views
 
 urlpatterns = [
     # Main views
@@ -31,6 +32,13 @@ urlpatterns = [
     path('user/<str:username>/', views.user_profile, name='user_profile'),
     path('follow/<int:user_id>/', views.follow_user, name='follow_user'),
     path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow_user'),
+    # Friend Requests
+    path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
+    path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
+    path('friend-request/reject/<int:request_id>/', views.reject_friend_request, name='reject_friend_request'),
+    path('friend-requests/', views.pending_friend_requests, name='friend_requests'),
+    path('find-friends/', views.find_friends, name='find_friends'),
+
     
     # Notifications
     path('notifications/', views.notifications, name='notifications'),
@@ -42,18 +50,29 @@ urlpatterns = [
     path('card/<int:card_id>/save/', views.save_card, name='save_card'),
     path('card/<int:card_id>/unsave/', views.unsave_card, name='unsave_card'),
     path('saved/', views.saved_cards, name='saved_cards'),
+    path('card/<int:card_id>/share-message/', views.share_card_message, name='share_card_message'),
     path('card/<int:card_id>/savers/', views.card_savers, name='card_savers'),
     
     # Direct Messages
-    path('inbox/', views.inbox, name='inbox'),
-    path('messages/sent/', views.sent_messages, name='sent_messages'),
-    path('messages/compose/', views.compose_message, name='compose_message'),
-    path('messages/compose/<str:username>/', views.compose_message, name='compose_message_to'),
-    path('messages/<int:message_id>/', views.view_message, name='view_message'),
-    path('messages/<int:message_id>/delete/', views.delete_message, name='delete_message'),
-    path('api/message-count/', views.get_unread_message_count, name='message_count'),
-    path('api/search-friends/', views.search_friends, name='search_friends'),
     
     # User Settings
     path('settings/', views.user_settings, name='user_settings'),
+
+    # Messages (New Conversation System)
+    path('conversations/', messaging_views.conversations_list, name='conversations_list'),
+    path('conversations/<int:conversation_id>/', messaging_views.conversation_detail, name='conversation_detail'),
+    path('conversations/start/', messaging_views.start_conversation, name='start_conversation'),
+    path('conversations/<int:conversation_id>/delete/', messaging_views.delete_conversation, name='delete_conversation'),
+    
+    # Legacy redirects for old messaging URLs
+    path('inbox/', views.redirect_to_conversations),
+    path('sent/', views.redirect_to_conversations),
+    path('compose/', views.redirect_compose_to_conversations),
+    path('compose/<str:recipient_username>/', views.redirect_compose_to_conversations),
+
+    # API Endpoints
+    path('api/notification-count/', views.get_notification_count, name='notification_count'),
+    path('api/message-count/', views.get_unread_message_count, name='message_count'),
+    path('api/friend-request-count/', views.get_friend_request_count, name='friend_request_count'),
+    path('api/search-friends/', views.search_friends, name='search_friends'),
 ]

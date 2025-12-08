@@ -1,0 +1,146 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Delete Card - Debrief{% endblock %}
+
+{% block extra_style %}
+.delete-container {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 0 20px;
+}
+
+.delete-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 2px solid rgba(239, 68, 68, 0.5);
+    text-align: center;
+}
+
+.delete-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.delete-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.delete-warning {
+    font-size: 16px;
+    color: #fca5a5;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.card-preview {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.card-preview-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.card-preview-topic {
+    font-size: 12px;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.card-preview-hypothesis {
+    font-size: 14px;
+    color: #b0b0c0;
+    line-height: 1.5;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.btn {
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+}
+
+.btn-cancel {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.warning-note {
+    font-size: 13px;
+    color: #808090;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-box">
+        <div class="delete-icon">🗑️</div>
+        <h1 class="delete-title">Delete This Card?</h1>
+        <p class="delete-warning">
+            This action cannot be undone. This card and all its arguments will be permanently deleted.
+        </p>
+
+        <div class="card-preview">
+            <div class="card-preview-topic">{{ card.get_topic_display }}</div>
+            <div class="card-preview-title">{{ card.title }}</div>
+            <div class="card-preview-hypothesis">{{ card.hypothesis|truncatewords:20 }}</div>
+        </div>
+
+        <div class="delete-actions">
+            <a href="{% url 'card_detail' card.id %}" class="btn btn-cancel">Cancel</a>
+            <form method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete Card</button>
+            </form>
+        </div>
+
+        <div class="warning-note">
+            ⚠️ All saved copies by other users will remain, but will no longer reference this card.
+        </div>
+    </div>
+</div>
+{% endblock %}

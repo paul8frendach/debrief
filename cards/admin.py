@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage
+from .models import Conversation,  Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest
 
 
 class ArgumentInline(admin.TabularInline):
@@ -64,6 +64,19 @@ class UserSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(DirectMessage)
 class DirectMessageAdmin(admin.ModelAdmin):
-    list_display = ['sender', 'recipient', 'subject', 'is_read', 'created_at']
+    list_display = ['sender', 'recipient', 'conversation', 'is_read', 'created_at']
     list_filter = ['is_read', 'created_at']
-    search_fields = ['sender__username', 'recipient__username', 'subject', 'message']
+    search_fields = ['sender__username', 'recipient__username', 'message']
+
+@admin.register(FriendRequest)
+class FriendRequestAdmin(admin.ModelAdmin):
+    list_display = ['from_user', 'to_user', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['from_user__username', 'to_user__username']
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ['participant1', 'participant2', 'card', 'created_at', 'updated_at']
+    list_filter = ['created_at', 'updated_at']
+    search_fields = ['participant1__username', 'participant2__username']

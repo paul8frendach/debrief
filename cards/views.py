@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage
+from .models import Conversation, Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest
 from .forms import CardForm, ArgumentForm, SourceForm, ArgumentFormSet
 from datetime import timedelta
 from django.utils import timezone
@@ -111,6 +112,14 @@ def create_card(request):
                 )
         
         messages.success(request, 'Argument card created successfully!')
+        
+        # Send email notifications to friends if card is public
+        if card.visibility == 'public':
+            from .emails import send_friend_card_notification
+            followers = User.objects.filter(following__following=request.user)
+            if followers.exists():
+                send_friend_card_notification(card, followers)
+        
         return redirect('card_detail', card_id=card.id)
     
     # GET request - show form
@@ -429,11 +438,33 @@ def user_profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     user_cards = Card.objects.filter(user=profile_user, visibility='public').order_by('-created_at')
     
+    # Get public saved cards
+    public_saves = SavedCard.objects.filter(
+        user=profile_user, 
+        visibility='public'
+    ).select_related('card', 'card__user').order_by('-saved_at')
+    
+    # If viewing own profile, also get private saves
+    private_saves = []
+    if request.user == profile_user:
+        private_saves = SavedCard.objects.filter(
+            user=profile_user, 
+            visibility='private'
+        ).select_related('card', 'card__user').order_by('-saved_at')
+    
     is_following = False
+    friend_request_pending = False
     if request.user.is_authenticated:
         is_following = Follow.objects.filter(
             follower=request.user, 
             following=profile_user
+        ).exists()
+        
+        # Check if there's a pending friend request
+        friend_request_pending = FriendRequest.objects.filter(
+            from_user=request.user,
+            to_user=profile_user,
+            status='pending'
         ).exists()
     
     followers_count = profile_user.followers.count()
@@ -448,7 +479,12 @@ def user_profile(request, username):
     context = {
         'profile_user': profile_user,
         'cards': user_cards,
+        'public_saved_cards': [save.card for save in public_saves],
+        'private_saved_cards': [save.card for save in private_saves],
+        'public_saves': public_saves,
+        'private_saves': private_saves,
         'is_following': is_following,
+        'friend_request_pending': friend_request_pending,
         'followers_count': followers_count,
         'following_count': following_count,
         'allows_messages': allows_messages,
@@ -609,16 +645,41 @@ def get_notification_count(request):
 
 @login_required
 def save_card(request, card_id):
-    """Save/bookmark a card"""
+    """Save/bookmark a card with visibility option"""
     card = get_object_or_404(Card, id=card_id)
     
     if card.user == request.user:
         messages.error(request, "You can't save your own card!")
-        return redirect(request.META.get('HTTP_REFERER', 'index'))
+        return redirect('card_detail', card_id=card.id)
     
-    saved, created = SavedCard.objects.get_or_create(user=request.user, card=card)
+    # Check if already saved
+    existing_save = SavedCard.objects.filter(user=request.user, card=card).first()
     
-    if created:
+    if request.method == 'POST':
+        visibility = request.POST.get('visibility', 'public')
+        
+        if existing_save:
+            # Update visibility if already saved
+            existing_save.visibility = visibility
+            existing_save.save()
+            messages.success(request, f"Card visibility updated to {visibility}!")
+        else:
+            # Create new save
+            SavedCard.objects.create(user=request.user, card=card, visibility=visibility)
+            Notification.objects.create(
+                recipient=card.user,
+                sender=request.user,
+                notification_type='like',
+                card=card,
+                message=f"{request.user.username} saved your card: {card.title}"
+            )
+            messages.success(request, f"Card saved to your {visibility} collection!")
+        
+        return redirect('card_detail', card_id=card.id)
+    
+    # If GET request, just create with default public visibility
+    if not existing_save:
+        SavedCard.objects.create(user=request.user, card=card, visibility='public')
         Notification.objects.create(
             recipient=card.user,
             sender=request.user,
@@ -630,7 +691,7 @@ def save_card(request, card_id):
     else:
         messages.info(request, "You already saved this card!")
     
-    return redirect(request.META.get('HTTP_REFERER', 'card_detail', card_id=card.id))
+    return redirect('card_detail', card_id=card.id)
 
 
 @login_required
@@ -645,133 +706,28 @@ def unsave_card(request, card_id):
 
 @login_required
 def saved_cards(request):
-    """View all saved cards"""
+    """View all saved cards with visibility filter"""
+    visibility_filter = request.GET.get('visibility', 'all')
+    
     saves = SavedCard.objects.filter(user=request.user).select_related('card', 'card__user')
+    
+    if visibility_filter == 'public':
+        saves = saves.filter(visibility='public')
+    elif visibility_filter == 'private':
+        saves = saves.filter(visibility='private')
+    
+    public_count = SavedCard.objects.filter(user=request.user, visibility='public').count()
+    private_count = SavedCard.objects.filter(user=request.user, visibility='private').count()
     
     context = {
         'saved_cards': [save.card for save in saves],
+        'saves': saves,
+        'visibility_filter': visibility_filter,
+        'public_count': public_count,
+        'private_count': private_count,
     }
     
     return render(request, 'cards/saved_cards.html', context)
-
-
-@login_required
-def inbox(request):
-    """View all received messages"""
-    messages_received = DirectMessage.objects.filter(recipient=request.user).select_related('sender')
-    unread_count = messages_received.filter(is_read=False).count()
-    
-    context = {
-        'messages': messages_received[:50],
-        'unread_count': unread_count,
-    }
-    
-    return render(request, 'cards/inbox.html', context)
-
-
-@login_required
-def sent_messages(request):
-    """View all sent messages"""
-    messages_sent = DirectMessage.objects.filter(sender=request.user).select_related('recipient')
-    
-    context = {
-        'messages': messages_sent[:50],
-    }
-    
-    return render(request, 'cards/sent_messages.html', context)
-
-
-@login_required
-def compose_message(request, username=None):
-    """Compose and send a message"""
-    recipient_user = None
-    if username:
-        recipient_user = get_object_or_404(User, username=username)
-        
-        settings, created = UserSettings.objects.get_or_create(user=recipient_user)
-        if not settings.allow_messages:
-            messages.error(request, f"{recipient_user.username} has disabled direct messages.")
-            return redirect('user_profile', username=username)
-    
-    if request.method == 'POST':
-        recipient_username = request.POST.get('recipient')
-        subject = request.POST.get('subject', '')
-        message_text = request.POST.get('message')
-        
-        try:
-            recipient = User.objects.get(username=recipient_username)
-            
-            settings, created = UserSettings.objects.get_or_create(user=recipient)
-            if not settings.allow_messages:
-                messages.error(request, f"{recipient.username} has disabled direct messages.")
-                return redirect('compose_message')
-            
-            if recipient == request.user:
-                messages.error(request, "You can't send messages to yourself!")
-                return redirect('compose_message')
-            
-            DirectMessage.objects.create(
-                sender=request.user,
-                recipient=recipient,
-                subject=subject,
-                message=message_text
-            )
-            
-            Notification.objects.create(
-                recipient=recipient,
-                sender=request.user,
-                notification_type='comment',
-                message=f"{request.user.username} sent you a message: {subject or 'New message'}"
-            )
-            
-            messages.success(request, f"Message sent to {recipient.username}!")
-            return redirect('sent_messages')
-            
-        except User.DoesNotExist:
-            messages.error(request, "User not found!")
-    
-    context = {
-        'recipient_user': recipient_user,
-    }
-    
-    return render(request, 'cards/compose_message.html', context)
-
-
-@login_required
-def view_message(request, message_id):
-    """View a single message"""
-    message = get_object_or_404(DirectMessage, id=message_id)
-    
-    if message.sender != request.user and message.recipient != request.user:
-        messages.error(request, "You don't have permission to view this message.")
-        return redirect('inbox')
-    
-    if message.recipient == request.user and not message.is_read:
-        message.is_read = True
-        message.save()
-    
-    context = {
-        'message': message,
-    }
-    
-    return render(request, 'cards/view_message.html', context)
-
-
-@login_required
-def delete_message(request, message_id):
-    """Delete a message"""
-    message = get_object_or_404(DirectMessage, id=message_id)
-    
-    if message.sender != request.user and message.recipient != request.user:
-        messages.error(request, "You don't have permission to delete this message.")
-        return redirect('inbox')
-    
-    if request.method == 'POST':
-        message.delete()
-        messages.success(request, "Message deleted!")
-        return redirect('inbox')
-    
-    return render(request, 'cards/confirm_delete_message.html', {'message': message})
 
 
 @login_required
@@ -798,7 +754,14 @@ def user_settings(request):
 def get_unread_message_count(request):
     """API endpoint to get unread message count"""
     from django.http import JsonResponse
-    count = DirectMessage.objects.filter(recipient=request.user, is_read=False).count()
+    from django.db.models import Q
+    
+    # Count unread messages in all conversations
+    count = DirectMessage.objects.filter(
+        recipient=request.user, 
+        is_read=False
+    ).count()
+    
     return JsonResponse({'count': count})
 
 
@@ -891,3 +854,273 @@ def search_friends(request):
         })
     
     return JsonResponse({'friends': results})
+
+@login_required
+def share_card_message(request, card_id):
+    """Share a card via direct message - creates a new conversation"""
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+    from django.db.models import Q
+    
+    card = get_object_or_404(Card, id=card_id)
+    
+    if request.method == 'POST':
+        recipient_username = request.POST.get('recipient')
+        message_text = request.POST.get('message')
+        
+        try:
+            recipient = User.objects.get(username=recipient_username)
+            
+            # Check if recipient allows messages
+            settings, created = UserSettings.objects.get_or_create(user=recipient)
+            if not settings.allow_messages:
+                messages.error(request, f"{recipient.username} has disabled direct messages.")
+                return HttpResponseRedirect(reverse('card_detail', args=[card.id]))
+            
+            # Find or create conversation about this card
+            conversation = Conversation.objects.filter(
+                Q(participant1=request.user, participant2=recipient, card=card) |
+                Q(participant1=recipient, participant2=request.user, card=card)
+            ).first()
+            
+            if not conversation:
+                conversation = Conversation.objects.create(
+                    participant1=request.user,
+                    participant2=recipient,
+                    card=card
+                )
+            
+            # Create message in conversation
+            DirectMessage.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                recipient=recipient,
+                message=message_text
+            )
+            
+            # Create notification
+            Notification.objects.create(
+                recipient=recipient,
+                sender=request.user,
+                notification_type='comment',
+                card=card,
+                message=f"{request.user.username} shared a card with you: {card.title}"
+            )
+            
+            # Send email notification
+            from .emails import send_card_shared_notification
+            send_card_shared_notification(conversation, card, request.user, recipient)
+            
+            messages.success(request, f"Card shared with {recipient.username}!")
+            return HttpResponseRedirect(reverse('conversation_detail', args=[conversation.id]))
+            
+        except User.DoesNotExist:
+            messages.error(request, "User not found!")
+            return HttpResponseRedirect(reverse('card_detail', args=[card.id]))
+    
+    return HttpResponseRedirect(reverse('card_detail', args=[card.id]))
+
+@login_required
+def send_friend_request(request, user_id):
+    """Send a friend request to another user"""
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+    from .emails import send_friend_request_email
+    
+    to_user = get_object_or_404(User, id=user_id)
+    
+    if to_user == request.user:
+        messages.error(request, "You cannot send a friend request to yourself!")
+        return redirect('explore')
+    
+    # Check if already following
+    if Follow.objects.filter(follower=request.user, following=to_user).exists():
+        messages.info(request, f"You are already friends with {to_user.username}!")
+        return redirect('user_profile', username=to_user.username)
+    
+    # Check if request already exists
+    existing_request = FriendRequest.objects.filter(
+        from_user=request.user,
+        to_user=to_user,
+        status='pending'
+    ).first()
+    
+    if existing_request:
+        messages.info(request, "Friend request already sent!")
+        return redirect('user_profile', username=to_user.username)
+    
+    # Create friend request
+    friend_request = FriendRequest.objects.create(
+        from_user=request.user,
+        to_user=to_user
+    )
+    
+    # Create notification
+    Notification.objects.create(
+        recipient=to_user,
+        sender=request.user,
+        notification_type='follow',
+        message=f"{request.user.username} sent you a friend request"
+    )
+    
+    # Send email notification
+    send_friend_request_email(friend_request)
+    
+    messages.success(request, f"Friend request sent to {to_user.username}!")
+    return redirect('user_profile', username=to_user.username)
+
+
+@login_required
+def accept_friend_request(request, request_id):
+    """Accept a friend request"""
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    
+    if friend_request.status == 'pending':
+        # Update request status
+        friend_request.status = 'accepted'
+        friend_request.save()
+        
+        # Create mutual follow relationships
+        Follow.objects.get_or_create(follower=request.user, following=friend_request.from_user)
+        Follow.objects.get_or_create(follower=friend_request.from_user, following=request.user)
+        
+        # Create notification for requester
+        Notification.objects.create(
+            recipient=friend_request.from_user,
+            sender=request.user,
+            notification_type='follow',
+            message=f"{request.user.username} accepted your friend request"
+        )
+        
+        # Send email notification to requester
+        from .emails import send_friend_accepted_email
+        send_friend_accepted_email(friend_request)
+        
+        messages.success(request, f"You are now friends with {friend_request.from_user.username}!")
+    
+    return redirect('notifications')
+
+
+@login_required
+def reject_friend_request(request, request_id):
+    """Reject a friend request"""
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    
+    if friend_request.status == 'pending':
+        friend_request.status = 'rejected'
+        friend_request.save()
+        
+        messages.success(request, "Friend request declined.")
+    
+    return redirect('notifications')
+
+
+@login_required
+def pending_friend_requests(request):
+    """View all pending friend requests"""
+    incoming_requests = FriendRequest.objects.filter(
+        to_user=request.user,
+        status='pending'
+    ).select_related('from_user')
+    
+    outgoing_requests = FriendRequest.objects.filter(
+        from_user=request.user,
+        status='pending'
+    ).select_related('to_user')
+    
+    context = {
+        'incoming_requests': incoming_requests,
+        'outgoing_requests': outgoing_requests,
+    }
+    
+    return render(request, 'cards/friend_requests.html', context)
+
+@login_required
+def get_friend_request_count(request):
+    """API endpoint to get pending friend request count"""
+    from django.http import JsonResponse
+    count = FriendRequest.objects.filter(to_user=request.user, status='pending').count()
+    return JsonResponse({'count': count})
+
+
+@login_required
+def find_friends(request):
+    """Search for users to add as friends"""
+    query = request.GET.get('q', '').strip()
+    
+    # Get users you're already following
+    following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+    
+    # Get pending friend requests (both sent and received)
+    pending_sent_ids = FriendRequest.objects.filter(
+        from_user=request.user, 
+        status='pending'
+    ).values_list('to_user_id', flat=True)
+    
+    pending_received_ids = FriendRequest.objects.filter(
+        to_user=request.user, 
+        status='pending'
+    ).values_list('from_user_id', flat=True)
+    
+    # Combine all excluded IDs
+    excluded_ids = set(following_ids) | set(pending_sent_ids) | set(pending_received_ids) | {request.user.id}
+    
+    if query:
+        # Search for users by username
+        users = User.objects.filter(
+            username__icontains=query
+        ).exclude(id__in=excluded_ids)[:20]
+    else:
+        # Show suggested users (most active or popular)
+        users = User.objects.exclude(id__in=excluded_ids).annotate(
+            card_count=Count('cards')
+        ).order_by('-card_count')[:20]
+    
+    context = {
+        'users': users,
+        'search_query': query,
+    }
+    
+    return render(request, 'cards/find_friends.html', context)
+
+
+# Legacy redirect views for old messaging URLs
+def redirect_to_conversations(request):
+    """Redirect old inbox/sent URLs to conversations"""
+    from django.shortcuts import redirect
+    return redirect('conversations_list')
+
+def redirect_compose_to_conversations(request, recipient_username=None):
+    """Redirect old compose URLs to conversations"""
+    from django.shortcuts import redirect
+    return redirect('conversations_list')
+
+
+
+@login_required
+def user_settings(request):
+    """User settings page"""
+    user_settings_obj, created = UserSettings.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        # Update privacy settings
+        if 'allow_messages' in request.POST:
+            user_settings_obj.allow_messages = True
+        else:
+            user_settings_obj.allow_messages = False
+        
+        # Update email notification settings
+        user_settings_obj.email_on_friend_request = 'email_on_friend_request' in request.POST
+        user_settings_obj.email_on_friend_card = 'email_on_friend_card' in request.POST
+        user_settings_obj.email_on_message = 'email_on_message' in request.POST
+        user_settings_obj.email_notifications = 'email_notifications' in request.POST
+        
+        user_settings_obj.save()
+        messages.success(request, "Settings updated successfully!")
+        return redirect('user_settings')
+    
+    context = {
+        'user_settings': user_settings_obj,
+    }
+    
+    return render(request, 'cards/settings.html', context)

@@ -1,0 +1,252 @@
+{% extends 'cards/base.html' %}
+{% load account %}
+
+{% block title %}Email Addresses - Debrief{% endblock %}
+
+{% block extra_style %}
+.email-container {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.email-box {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.email-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.email-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.email-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.email-subtitle {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.email-list {
+    margin-bottom: 32px;
+}
+
+.email-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-info {
+    flex: 1;
+}
+
+.email-address {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.email-status {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-verified {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-unverified {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-primary {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.email-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.add-email-form {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e0e0;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    color: #93c5fd;
+    font-size: 14px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="email-container">
+    <div class="email-box">
+        <div class="email-header">
+            <div class="email-icon">📧</div>
+            <h1 class="email-title">Email Addresses</h1>
+            <p class="email-subtitle">Manage your email addresses and verification status</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert-info">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="email-list">
+            {% if user.emailaddress_set.all %}
+                {% for email in user.emailaddress_set.all %}
+                <div class="email-item">
+                    <div class="email-info">
+                        <div class="email-address">{{ email.email }}</div>
+                        <div class="email-status">
+                            {% if email.verified %}
+                            <span class="status-badge status-verified">✓ Verified</span>
+                            {% else %}
+                            <span class="status-badge status-unverified">⚠ Unverified</span>
+                            {% endif %}
+                            {% if email.primary %}
+                            <span class="status-badge status-primary">Primary</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="email-actions">
+                        {% if not email.verified %}
+                        <form method="POST" action="{% url 'account_email' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_send" value="{{ email.email }}">
+                            <button type="submit" class="btn-small btn-primary">Resend Verification</button>
+                        </form>
+                        {% endif %}
+                        {% if email.verified and not email.primary %}
+                        <form method="POST" action="{% url 'account_email' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_primary" value="{{ email.email }}">
+                            <button type="submit" class="btn-small btn-secondary">Make Primary</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert-info">
+                    No email addresses associated with your account.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="add-email-form">
+            <h3 style="color: white; font-size: 18px; margin-bottom: 16px;">Add Email Address</h3>
+            <form method="POST" action="{% url 'account_email' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="id_email">Email Address</label>
+                    <input type="email" name="email" class="form-input" placeholder="Enter new email address" required id="id_email">
+                </div>
+                <input type="hidden" name="action_add" value="1">
+                <button type="submit" class="btn-small btn-primary">Add Email</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

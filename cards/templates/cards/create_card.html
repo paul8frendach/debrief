@@ -560,6 +560,15 @@
             else if (length > max * 0.7) counter.classList.add('warning');
         }
 
+        // Toggle collapsible sections
+        function togglePreviewSection(section) {
+            const content = document.getElementById(section + 'Content');
+            const icon = document.getElementById(section + 'Icon');
+            
+            content.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+        
         function updatePreview() {
             // Scope
             const scope = document.getElementById('scope').value;
