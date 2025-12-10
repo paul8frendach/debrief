@@ -5,8 +5,9 @@ django-allauth==65.13.1
 # Static files
 whitenoise==6.7.0
 
-# Image Processing (Python 3.12 compatible)
-Pillow==10.3.0
+# Pillow pre-built wheel for Linux
+Pillow==10.4.0
+
 
 # YouTube Features
 youtube-transcript-api==0.6.2
