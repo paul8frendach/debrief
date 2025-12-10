@@ -9,6 +9,52 @@
     padding: 0 20px;
 }
 
+.completion-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-bottom: 32px;
+    color: white;
+}
+
+.completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.completion-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.completion-percentage {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.incomplete-fields {
+    margin-top: 12px;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
 .settings-header {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-radius: 16px;
@@ -29,15 +75,11 @@
     color: #a0a0c0;
 }
 
-.settings-grid {
-    display: grid;
-    gap: 24px;
-}
-
 .settings-section {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-radius: 16px;
     padding: 32px;
+    margin-bottom: 24px;
     border: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -80,6 +122,81 @@
 .setting-help {
     font-size: 13px;
     color: #808090;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255,255,255,0.08);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.profile-pic-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 12px;
+    border: 3px solid rgba(102, 126, 234, 0.5);
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.file-input-btn {
+    padding: 10px 20px;
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    display: inline-block;
+    transition: all 0.2s;
+}
+
+.file-input-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    cursor: pointer;
 }
 
 .toggle-switch {
@@ -126,11 +243,31 @@ input:checked + .toggle-slider:before {
     transform: translateX(24px);
 }
 
+.toggle-saving {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.toggle-saved {
+    position: relative;
+}
+
+.toggle-saved::after {
+    content: "✓";
+    position: absolute;
+    right: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #10b981;
+    font-weight: 700;
+    font-size: 18px;
+}
+
 .btn {
-    padding: 12px 24px;
+    padding: 14px 32px;
     border-radius: 10px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 16px;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
@@ -141,6 +278,7 @@ input:checked + .toggle-slider:before {
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    width: 100%;
 }
 
 .btn-primary:hover {
@@ -156,22 +294,6 @@ input:checked + .toggle-slider:before {
 
 .btn-danger:hover {
     background: rgba(239, 68, 68, 0.3);
-}
-
-.btn-secondary {
-    background: rgba(255,255,255,0.1);
-    color: white;
-    border: 2px solid rgba(255,255,255,0.2);
-}
-
-.btn-secondary:hover {
-    background: rgba(255,255,255,0.15);
-}
-
-.action-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
 }
 
 .account-info {
@@ -200,125 +322,232 @@ input:checked + .toggle-slider:before {
 
 {% block content %}
 <div class="settings-container">
+    <!-- Profile Completion Banner -->
+    {% if user_settings.profile_completion_percentage < 100 %}
+    <div class="completion-banner">
+        <div class="completion-header">
+            <div class="completion-title">🎯 Complete Your Profile</div>
+            <div class="completion-percentage">{{ user_settings.profile_completion_percentage }}%</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ user_settings.profile_completion_percentage }}%"></div>
+        </div>
+        <div class="incomplete-fields">
+            Missing: {{ user_settings.incomplete_fields|join:", " }}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="settings-header">
         <h1 class="settings-title">Settings</h1>
-        <p class="settings-subtitle">Manage your account preferences and privacy settings</p>
+        <p class="settings-subtitle">Manage your account preferences and profile information</p>
     </div>
 
-    <div class="settings-grid">
-        <!-- Account Information -->
-        <div class="settings-section">
-            <h2 class="section-title">Account Information</h2>
-            <p class="section-description">Your basic account details</p>
+    <!-- Profile Information Form (with Save Button) -->
+    <div class="settings-section">
+        <h2 class="section-title">Profile Information</h2>
+        <p class="section-description">Tell us about yourself</p>
+        
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="profile">
             
-            <div class="account-info">
-                <div class="info-row">
-                    <span class="info-label">Username</span>
-                    <span class="info-value">{{ user.username }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ user.email }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Joined</span>
-                    <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+            <div class="form-group">
+                <label class="form-label">Profile Picture</label>
+                {% if user_settings.profile_picture %}
+                <img src="{{ user_settings.profile_picture.url }}" class="profile-pic-preview">
+                {% endif %}
+                <div class="file-input-wrapper">
+                    <label class="file-input-btn">
+                        📷 Choose Photo
+                        <input type="file" name="profile_picture" accept="image/*" class="file-input">
+                    </label>
                 </div>
             </div>
             
-            <div class="action-buttons">
-                <a href="{% url 'account_email' %}" class="btn btn-secondary">Manage Email</a>
-                <a href="{% url 'account_change_password' %}" class="btn btn-secondary">Change Password</a>
+            <div class="form-group">
+                <label class="form-label">Bio</label>
+                <textarea name="bio" class="form-textarea" placeholder="Tell us about yourself">{% if user_settings.bio %}{{ user_settings.bio }}{% endif %}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Mobile Number</label>
+                <input type="tel" name="mobile_number" class="form-input" placeholder="+1 (555) 123-4567" value="{% if user_settings.mobile_number %}{{ user_settings.mobile_number }}{% endif %}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Home State</label>
+                <select name="home_state" class="form-select">
+                    <option value="">Select your state...</option>
+                    {% for code, name in state_choices %}
+                    <option value="{{ code }}" {% if user_settings.home_state == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Birthdate</label>
+                <input type="date" name="birthdate" class="form-input" value="{% if user_settings.birthdate %}{{ user_settings.birthdate|date:'Y-m-d' }}{% endif %}">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">💾 Save Profile Changes</button>
+        </form>
+    </div>
+
+    <!-- Account Information (Read-Only) -->
+    <div class="settings-section">
+        <h2 class="section-title">Account Information</h2>
+        <p class="section-description">Your basic account details</p>
+        
+        <div class="account-info">
+            <div class="info-row">
+                <span class="info-label">Username</span>
+                <span class="info-value">{{ user.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ user.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Joined</span>
+                <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
             </div>
         </div>
+    </div>
 
-        <!-- Privacy Settings -->
-        <div class="settings-section">
-            <h2 class="section-title">Privacy Settings</h2>
-            <p class="section-description">Control who can interact with you</p>
-            
-            <form method="POST" id="privacyForm">
-                {% csrf_token %}
-                
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">Allow Direct Messages</div>
-                        <div class="setting-help">Let other users send you direct messages</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="allow_messages" {% if user_settings.allow_messages %}checked{% endif %} onchange="document.getElementById('privacyForm').submit()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </form>
-        </div>
-
-        <!-- Email Notifications -->
-        <div class="settings-section">
-            <h2 class="section-title">Email Notifications</h2>
-            <p class="section-description">Choose what emails you want to receive</p>
-            
-            <form method="POST" id="notificationForm">
-                {% csrf_token %}
-                
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">Friend Requests</div>
-                        <div class="setting-help">Get notified when someone sends you a friend request</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="email_on_friend_request" {% if user_settings.email_on_friend_request %}checked{% endif %} onchange="document.getElementById('notificationForm').submit()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">Friend's Cards</div>
-                        <div class="setting-help">Get notified when friends create new cards</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="email_on_friend_card" {% if user_settings.email_on_friend_card %}checked{% endif %} onchange="document.getElementById('notificationForm').submit()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">Direct Messages</div>
-                        <div class="setting-help">Get notified when you receive a direct message</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="email_on_message" {% if user_settings.email_on_message %}checked{% endif %} onchange="document.getElementById('notificationForm').submit()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">General Notifications</div>
-                        <div class="setting-help">Comments, likes, and other activity on your cards</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="email_notifications" {% if user_settings.email_notifications %}checked{% endif %} onchange="document.getElementById('notificationForm').submit()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </form>
-        </div>
-
-        <!-- Account Actions -->
-        <div class="settings-section">
-            <h2 class="section-title">Account Actions</h2>
-            <p class="section-description">Manage your session and account</p>
-            
-            <div class="action-buttons">
-                <form method="POST" action="{% url 'account_logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">🚪 Log Out</button>
-                </form>
+    <!-- Privacy Settings (Auto-Save Toggles) -->
+    <div class="settings-section">
+        <h2 class="section-title">Privacy Settings</h2>
+        <p class="section-description">Control who can interact with you</p>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">Allow Direct Messages</div>
+                <div class="setting-help">Let other users send you direct messages</div>
             </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="allow_messages" {% if user_settings.allow_messages %}checked{% endif %} onchange="autoSaveToggle(this, 'allow_messages')">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
+    </div>
+
+    <!-- Notification Settings (Auto-Save Toggles) -->
+    <div class="settings-section">
+        <h2 class="section-title">Notifications</h2>
+        <p class="section-description">Choose how you want to be notified</p>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">Email Notifications</div>
+                <div class="setting-help">General email notifications</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="email_notifications" {% if user_settings.email_notifications %}checked{% endif %} onchange="autoSaveToggle(this, 'email_notifications')">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">SMS Notifications</div>
+                <div class="setting-help">Receive important updates via text</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="sms_notifications" {% if user_settings.sms_notifications %}checked{% endif %} {% if not user_settings.mobile_number %}disabled{% endif %} onchange="autoSaveToggle(this, 'sms_notifications')">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">Friend Requests</div>
+                <div class="setting-help">When someone sends a friend request</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="email_on_friend_request" {% if user_settings.email_on_friend_request %}checked{% endif %} onchange="autoSaveToggle(this, 'email_on_friend_request')">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">Friend's Cards</div>
+                <div class="setting-help">When friends create new cards</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="email_on_friend_card" {% if user_settings.email_on_friend_card %}checked{% endif %} onchange="autoSaveToggle(this, 'email_on_friend_card')">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-label">Direct Messages</div>
+                <div class="setting-help">When you receive messages</div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" name="email_on_message" {% if user_settings.email_on_message %}checked{% endif %} onchange="autoSaveToggle(this, 'email_on_message')">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Logout Section -->
+    <div class="settings-section">
+        <h2 class="section-title">Account Actions</h2>
+        <p class="section-description">Manage your session</p>
+        
+        <form method="POST" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">🚪 Log Out</button>
+        </form>
     </div>
 </div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function autoSaveToggle(checkbox, fieldName) {
+    const toggleSwitch = checkbox.closest('.toggle-switch');
+    toggleSwitch.classList.add('toggle-saving');
+    
+    // Send AJAX request to save
+    fetch('{% url "user_settings" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `form_type=toggle&field=${fieldName}&value=${checkbox.checked}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        toggleSwitch.classList.remove('toggle-saving');
+        toggleSwitch.classList.add('toggle-saved');
+        setTimeout(() => {
+            toggleSwitch.classList.remove('toggle-saved');
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toggleSwitch.classList.remove('toggle-saving');
+        // Revert checkbox on error
+        checkbox.checked = !checkbox.checked;
+    });
+}
+</script>
 {% endblock %}

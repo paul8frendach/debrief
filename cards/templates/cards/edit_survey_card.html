@@ -1,0 +1,352 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Edit Your Card - Debrief{% endblock %}
+
+{% block extra_style %}
+.edit-container {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.edit-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    color: white;
+    text-align: center;
+}
+
+.header-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    opacity: 0.95;
+}
+
+.edit-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.edit-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.panel-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 14px;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.argument-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.argument-item {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #667eea;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.add-arg-btn {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.preview-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.preview-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.preview-section {
+    margin-bottom: 20px;
+}
+
+.preview-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a0a0c0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.preview-text {
+    color: #d0d0e0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.preview-list {
+    list-style: none;
+    padding: 0;
+}
+
+.preview-list li {
+    background: rgba(255,255,255,0.03);
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: #d0d0e0;
+    font-size: 14px;
+    border-left: 3px solid #667eea;
+}
+
+.publish-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 24px;
+}
+
+.publish-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+@media (max-width: 1024px) {
+    .edit-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-panel {
+        position: static;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <div class="edit-header">
+        <h1 class="header-title">✨ Your Card Has Been Generated!</h1>
+        <p class="header-subtitle">Review your pre-filled argument card. Make any edits you'd like, then publish!</p>
+    </div>
+
+    <div class="edit-layout">
+        <!-- Edit Form -->
+        <div class="edit-panel">
+            <h2 class="panel-title">Edit Card Details</h2>
+            
+            <form id="editForm" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input" value="{{ draft.title }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Scope</label>
+                    <select name="scope" class="form-select" required>
+                        <option value="federal" {% if draft.scope == 'federal' %}selected{% endif %}>Federal</option>
+                        <option value="state" {% if draft.scope == 'state' %}selected{% endif %}>State</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Your Stance</label>
+                    <select name="stance" class="form-select" required>
+                        <option value="for" {% if draft.stance == 'for' %}selected{% endif %}>For</option>
+                        <option value="against" {% if draft.stance == 'against' %}selected{% endif %}>Against</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Hypothesis (Why you believe this)</label>
+                    <textarea name="hypothesis" class="form-textarea" required>{{ draft.hypothesis }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Supporting Arguments</label>
+                    <div id="supportingArgs" class="argument-list">
+                        {% for arg in draft.supporting_args %}
+                        <div class="argument-item">
+                            <textarea name="supporting_args[]" class="form-textarea" style="min-height: 60px;" required>{{ arg }}</textarea>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="add-arg-btn" onclick="addArgument('supporting')">+ Add Supporting Point</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Opposing Arguments</label>
+                    <div id="opposingArgs" class="argument-list">
+                        {% for arg in draft.opposing_args %}
+                        <div class="argument-item">
+                            <textarea name="opposing_args[]" class="form-textarea" style="min-height: 60px;" required>{{ arg }}</textarea>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="add-arg-btn" onclick="addArgument('opposing')">+ Add Opposing Point</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Conclusion</label>
+                    <textarea name="conclusion" class="form-textarea" required>{{ draft.conclusion }}</textarea>
+                </div>
+                
+                <button type="submit" class="publish-btn">🚀 Looks Good - Publish Card</button>
+            </form>
+        </div>
+        
+        <!-- Live Preview -->
+        <div class="preview-panel">
+            <h2 class="panel-title">Live Preview</h2>
+            
+            <div class="preview-title" id="previewTitle">{{ draft.title }}</div>
+            
+            <div class="preview-section">
+                <div class="preview-label">Hypothesis</div>
+                <div class="preview-text" id="previewHypothesis">{{ draft.hypothesis }}</div>
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-label">Supporting Arguments</div>
+                <ul class="preview-list" id="previewSupporting">
+                    {% for arg in draft.supporting_args %}
+                    <li>{{ arg }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-label">Opposing Arguments</div>
+                <ul class="preview-list" id="previewOpposing">
+                    {% for arg in draft.opposing_args %}
+                    <li>{{ arg }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="preview-section">
+                <div class="preview-label">Conclusion</div>
+                <div class="preview-text" id="previewConclusion">{{ draft.conclusion }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addArgument(type) {
+    const container = document.getElementById(type + 'Args');
+    const div = document.createElement('div');
+    div.className = 'argument-item';
+    div.innerHTML = `
+        <textarea name="${type}_args[]" class="form-textarea" style="min-height: 60px;" placeholder="Add another point..." required></textarea>
+    `;
+    container.appendChild(div);
+    updatePreview();
+}
+
+// Live preview updates
+document.getElementById('editForm').addEventListener('input', updatePreview);
+
+function updatePreview() {
+    const title = document.querySelector('[name="title"]').value;
+    const hypothesis = document.querySelector('[name="hypothesis"]').value;
+    const conclusion = document.querySelector('[name="conclusion"]').value;
+    
+    document.getElementById('previewTitle').textContent = title;
+    document.getElementById('previewHypothesis').textContent = hypothesis;
+    document.getElementById('previewConclusion').textContent = conclusion;
+    
+    // Update supporting args
+    const supportingArgs = document.querySelectorAll('[name="supporting_args[]"]');
+    const supportingList = document.getElementById('previewSupporting');
+    supportingList.innerHTML = '';
+    supportingArgs.forEach(arg => {
+        if (arg.value.trim()) {
+            const li = document.createElement('li');
+            li.textContent = arg.value;
+            supportingList.appendChild(li);
+        }
+    });
+    
+    // Update opposing args
+    const opposingArgs = document.querySelectorAll('[name="opposing_args[]"]');
+    const opposingList = document.getElementById('previewOpposing');
+    opposingList.innerHTML = '';
+    opposingArgs.forEach(arg => {
+        if (arg.value.trim()) {
+            const li = document.createElement('li');
+            li.textContent = arg.value;
+            opposingList.appendChild(li);
+        }
+    });
+}
+</script>
+{% endblock %}

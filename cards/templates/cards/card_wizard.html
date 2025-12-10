@@ -1,0 +1,559 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Create Argument Card - Debrief{% endblock %}
+
+{% block extra_style %}
+.wizard-container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.wizard-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.wizard-progress::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.2);
+    z-index: 0;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #808090;
+    transition: all 0.3s;
+}
+
+.progress-step.active .step-circle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+}
+
+.progress-step.completed .step-circle {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.step-label {
+    font-size: 12px;
+    color: #808090;
+    font-weight: 600;
+}
+
+.progress-step.active .step-label {
+    color: white;
+}
+
+.wizard-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.wizard-step {
+    display: none;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+.step-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.step-description {
+    font-size: 16px;
+    color: #a0a0c0;
+    margin-bottom: 32px;
+    line-height: 1.6;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.stance-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stance-card {
+    padding: 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.stance-card:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.stance-card.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.2);
+}
+
+.stance-card input {
+    display: none;
+}
+
+.stance-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.stance-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+}
+
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid rgba(255,255,255,0.1);
+}
+
+.btn {
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.argument-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.argument-item {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #667eea;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.add-argument-btn {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.add-argument-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <!-- Progress Bar -->
+    <div class="wizard-progress">
+        <div class="progress-step active" data-step="1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Topic</div>
+        </div>
+        <div class="progress-step" data-step="2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Position</div>
+        </div>
+        <div class="progress-step" data-step="3">
+            <div class="step-circle">3</div>
+            <div class="step-label">Support</div>
+        </div>
+        <div class="progress-step" data-step="4">
+            <div class="step-circle">4</div>
+            <div class="step-label">Oppose</div>
+        </div>
+        <div class="progress-step" data-step="5">
+            <div class="step-circle">5</div>
+            <div class="step-label">Alternative</div>
+        </div>
+        <div class="progress-step" data-step="6">
+            <div class="step-circle">6</div>
+            <div class="step-label">Review</div>
+        </div>
+    </div>
+
+    <form id="wizardForm" method="POST" action="{% url 'create_card_wizard' %}">
+        {% csrf_token %}
+        
+        <div class="wizard-card">
+            <!-- Step 1: Topic & Scope -->
+            <div class="wizard-step active" data-step="1">
+                <h2 class="step-title">What policy issue do you want to discuss?</h2>
+                <p class="step-description">Select a topic and specify whether it's a federal or state-level issue.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Policy Topic</label>
+                    <select name="topic" class="form-select" required>
+                        <option value="">Choose a topic...</option>
+                        {% for code, name in topics %}
+                        <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Scope</label>
+                    <div class="stance-options">
+                        <label class="stance-card">
+                            <input type="radio" name="scope" value="federal" required>
+                            <div class="stance-icon">🏛️</div>
+                            <div class="stance-label">Federal</div>
+                        </label>
+                        <label class="stance-card">
+                            <input type="radio" name="scope" value="state" required>
+                            <div class="stance-icon">🗺️</div>
+                            <div class="stance-label">State</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Position & Hypothesis -->
+            <div class="wizard-step" data-step="2">
+                <h2 class="step-title">What's your position on this issue?</h2>
+                <p class="step-description">State your main argument and explain why you hold this position.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Card Title (Your Main Claim)</label>
+                    <input type="text" name="title" class="form-input" placeholder="Example: Americans Should Be Allowed to Import Japanese Kei Cars" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Hypothesis (Why do you believe this?)</label>
+                    <textarea name="hypothesis" class="form-textarea" placeholder="Explain the reasoning behind your position..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Your Stance</label>
+                    <div class="stance-options">
+                        <label class="stance-card">
+                            <input type="radio" name="stance" value="for" required>
+                            <div class="stance-icon">✅</div>
+                            <div class="stance-label">For</div>
+                        </label>
+                        <label class="stance-card">
+                            <input type="radio" name="stance" value="against" required>
+                            <div class="stance-icon">❌</div>
+                            <div class="stance-label">Against</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Supporting Arguments -->
+            <div class="wizard-step" data-step="3">
+                <h2 class="step-title">How could this be helpful?</h2>
+                <p class="step-description">List the benefits and positive outcomes of your position.</p>
+                
+                <div id="supportingArgs" class="argument-list">
+                    <div class="argument-item">
+                        <label class="form-label">Supporting Point #1</label>
+                        <input type="text" name="supporting_args[]" class="form-input" placeholder="Example: Kei cars are affordable and fuel-efficient" required>
+                    </div>
+                </div>
+                
+                <button type="button" class="add-argument-btn" onclick="addArgument('supporting')">+ Add Another Supporting Point</button>
+            </div>
+
+            <!-- Step 4: Opposing Arguments -->
+            <div class="wizard-step" data-step="4">
+                <h2 class="step-title">How could this hurt?</h2>
+                <p class="step-description">Consider potential drawbacks and challenges.</p>
+                
+                <div id="opposingArgs" class="argument-list">
+                    <div class="argument-item">
+                        <label class="form-label">Opposing Point #1</label>
+                        <input type="text" name="opposing_args[]" class="form-input" placeholder="Example: May not meet US safety standards" required>
+                    </div>
+                </div>
+                
+                <button type="button" class="add-argument-btn" onclick="addArgument('opposing')">+ Add Another Opposing Point</button>
+            </div>
+
+            <!-- Step 5: Conclusion & Alternative -->
+            <div class="wizard-step" data-step="5">
+                <h2 class="step-title">What's your conclusion?</h2>
+                <p class="step-description">Summarize your position and suggest alternatives if applicable.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Conclusion</label>
+                    <textarea name="conclusion" class="form-textarea" placeholder="Summarize your overall position and recommendation..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Alternative Solution (Optional)</label>
+                    <textarea name="alternative" class="form-textarea" placeholder="Is there a better approach that would work better?"></textarea>
+                </div>
+            </div>
+
+            <!-- Step 6: Review & Submit -->
+            <div class="wizard-step" data-step="6">
+                <h2 class="step-title">Review Your Argument Card</h2>
+                <p class="step-description">Double-check everything before publishing.</p>
+                
+                <div id="reviewContent" style="color: white;">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">← Previous</button>
+                <div></div>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">Next →</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">🚀 Publish Card</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 6;
+
+function changeStep(direction) {
+    // Validate current step
+    if (direction > 0 && !validateStep(currentStep)) {
+        return;
+    }
+    
+    // Update step
+    currentStep += direction;
+    
+    // Update UI
+    updateStepUI();
+    
+    // Show review on last step
+    if (currentStep === 6) {
+        populateReview();
+    }
+}
+
+function updateStepUI() {
+    // Update step visibility
+    document.querySelectorAll('.wizard-step').forEach((step, index) => {
+        step.classList.toggle('active', index + 1 === currentStep);
+    });
+    
+    // Update progress bar
+    document.querySelectorAll('.progress-step').forEach((step, index) => {
+        const stepNum = index + 1;
+        step.classList.toggle('active', stepNum === currentStep);
+        step.classList.toggle('completed', stepNum < currentStep);
+    });
+    
+    // Update buttons
+    document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+    document.getElementById('nextBtn').style.display = currentStep === totalSteps ? 'none' : 'block';
+    document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'block' : 'none';
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(step) {
+    const stepElement = document.querySelector(`.wizard-step[data-step="${step}"]`);
+    const inputs = stepElement.querySelectorAll('input[required], textarea[required], select[required]');
+    
+    for (let input of inputs) {
+        if (!input.value.trim()) {
+            alert('Please fill in all required fields');
+            input.focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function addArgument(type) {
+    const container = document.getElementById(type + 'Args');
+    const count = container.children.length + 1;
+    const label = type === 'supporting' ? 'Supporting' : 'Opposing';
+    
+    const div = document.createElement('div');
+    div.className = 'argument-item';
+    div.innerHTML = `
+        <label class="form-label">${label} Point #${count}</label>
+        <input type="text" name="${type}_args[]" class="form-input" placeholder="Add another point..." required>
+    `;
+    container.appendChild(div);
+}
+
+function populateReview() {
+    const formData = new FormData(document.getElementById('wizardForm'));
+    const review = document.getElementById('reviewContent');
+    
+    const title = formData.get('title');
+    const topic = document.querySelector('[name="topic"] option:checked').text;
+    const scope = formData.get('scope');
+    const stance = formData.get('stance');
+    const hypothesis = formData.get('hypothesis');
+    const conclusion = formData.get('conclusion');
+    const alternative = formData.get('alternative');
+    
+    const supportingArgs = formData.getAll('supporting_args[]');
+    const opposingArgs = formData.getAll('opposing_args[]');
+    
+    review.innerHTML = `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px;">
+            <h3 style="font-size: 24px; margin-bottom: 16px;">${title}</h3>
+            <div style="margin-bottom: 16px; color: #a0a0c0;">
+                <strong>Topic:</strong> ${topic} | <strong>Scope:</strong> ${scope} | <strong>Stance:</strong> ${stance}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #a0b5ff;">Hypothesis:</strong>
+                <p style="margin-top: 8px; color: #d0d0e0;">${hypothesis}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #10b981;">Supporting Arguments:</strong>
+                <ul style="margin-top: 8px; padding-left: 20px; color: #d0d0e0;">
+                    ${supportingArgs.map(arg => `<li>${arg}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #f87171;">Opposing Arguments:</strong>
+                <ul style="margin-top: 8px; padding-left: 20px; color: #d0d0e0;">
+                    ${opposingArgs.map(arg => `<li>${arg}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong style="color: #a0b5ff;">Conclusion:</strong>
+                <p style="margin-top: 8px; color: #d0d0e0;">${conclusion}</p>
+            </div>
+            
+            ${alternative ? `
+                <div>
+                    <strong style="color: #fbbf24;">Alternative Solution:</strong>
+                    <p style="margin-top: 8px; color: #d0d0e0;">${alternative}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Handle stance card selection
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.stance-card')) {
+        const card = e.target.closest('.stance-card');
+        const radio = card.querySelector('input[type="radio"]');
+        
+        // Remove selected from siblings
+        card.parentElement.querySelectorAll('.stance-card').forEach(c => c.classList.remove('selected'));
+        
+        // Add selected to clicked
+        card.classList.add('selected');
+        radio.checked = true;
+    }
+});
+</script>
+{% endblock %}

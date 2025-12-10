@@ -319,7 +319,31 @@
         <div class="card-full">
             <div class="card-header">
                 <div class="topic-path">{{ card.get_topic_display }} → {{ card.subcategory }}</div>
-                <h1 class="card-title">{{ card.title }}</h1>
+                <h1 class="card-title">
+                {{ card.title }}
+                {% if card.source_type == 'public_figure' %}
+                <span style="display: inline-block; background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-left: 12px;">
+                    🎙️ Public Figure (Unverified)
+                </span>
+                {% elif card.source_type == 'verified' %}
+                <span style="display: inline-block; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-left: 12px;">
+                    ✓ Verified
+                </span>
+                {% elif card.source_type == 'commons' %}
+                <span style="display: inline-block; background: rgba(102, 126, 234, 0.2); color: #a0b5ff; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-left: 12px;">
+                    🏛️ Commons
+                </span>
+                {% endif %}
+            </h1>
+            
+            {% if card.original_source %}
+            <div style="font-size: 16px; color: #a0a0c0; margin-top: 8px;">
+                Original source: <strong style="color: white;">{{ card.original_source }}</strong>
+                {% if card.source_url %}
+                | <a href="{{ card.source_url }}" target="_blank" style="color: #667eea;">View Original Content →</a>
+                {% endif %}
+            </div>
+            {% endif %}
                 <span class="stance-badge">{{ card.stance|upper }}</span>
             </div>
             

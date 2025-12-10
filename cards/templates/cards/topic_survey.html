@@ -1,0 +1,515 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}{{ topic_display }} Survey - Debrief{% endblock %}
+
+{% block extra_style %}
+.survey-container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.survey-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    text-align: center;
+    color: white;
+}
+
+.survey-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.survey-description {
+    font-size: 16px;
+    line-height: 1.8;
+    opacity: 0.95;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.progress-track {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.progress-step {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #808090;
+    font-size: 14px;
+}
+
+.progress-step.completed {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.progress-step.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    transform: scale(1.2);
+}
+
+.progress-fill {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.4s ease;
+}
+
+.question-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: none;
+}
+
+.question-card.active {
+    display: block;
+    animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-number {
+    font-size: 14px;
+    font-weight: 700;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.question-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 32px;
+    line-height: 1.4;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.option-bubble {
+    background: rgba(255,255,255,0.03);
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.option-bubble::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.option-bubble:hover {
+    border-color: #667eea;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.option-bubble.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.option-bubble.selected::before {
+    opacity: 0.1;
+}
+
+.option-content {
+    position: relative;
+    z-index: 1;
+}
+
+.option-emoji {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.option-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    line-height: 1.5;
+}
+
+.option-bubble.selected .option-text {
+    color: white;
+}
+
+.option-bubble input[type="radio"] {
+    display: none;
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.btn {
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    flex: 1;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+@media (max-width: 768px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .survey-title {
+        font-size: 28px;
+    }
+    
+    .question-text {
+        font-size: 20px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="survey-container">
+    <!-- Header -->
+    <div class="survey-header">
+        <h1 class="survey-title">📊 {{ survey.title }}</h1>
+        <div class="survey-description">{{ survey.description|safe }}</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-text" style="color: #a0a0c0; font-size: 14px; margin-bottom: 12px;">
+            Question <span id="currentQuestionDisplay">1</span> of {{ questions.count }}
+        </div>
+        <div class="progress-bar">
+            <div class="progress-track">
+                {% for question in questions %}
+                <div class="progress-step {% if forloop.first %}active{% endif %}" data-step="{{ forloop.counter }}" id="step{{ forloop.counter }}">
+                    <div class="step-number">{{ forloop.counter }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="progress-fill">
+                <div class="progress-fill-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Survey Form -->
+    <form id="surveyForm" method="POST" action="{% url 'process_survey' survey.topic %}">
+        {% csrf_token %}
+        
+        {% for question in questions %}
+        <div class="question-card {% if forloop.first %}active{% endif %}" data-question="{{ forloop.counter }}">
+            <div class="question-number">Question {{ forloop.counter }} of {{ questions|length }}</div>
+            <h2 class="question-text">{{ question.question_text }}</h2>
+            
+            <div class="options-grid">
+                {% for option in question.options.all %}
+                <label class="option-bubble" data-question-id="{{ question.id }}" data-option-id="{{ option.id }}">
+                    {% if question.order == 1 or question.order == 9 %}
+                    <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" required>
+                    {% else %}
+                    <input type="checkbox" name="question_{{ question.id }}" value="{{ option.id }}">
+                    {% endif %}
+                    <div class="option-content">
+                        <div class="option-text">{{ option.option_text }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            
+            <div class="navigation-buttons">
+                {% if not forloop.first %}
+                <button type="button" class="btn btn-secondary" onclick="previousQuestion()">
+                    ← Previous
+                </button>
+                {% else %}
+                <div></div>
+                {% endif %}
+                
+                {% if forloop.counter == questions.count %}
+                <button type="button" class="btn btn-primary" onclick="completeForm()" id="nextBtn{{ forloop.counter }}" disabled style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    ✨ View My Card Preview
+                </button>
+                {% else %}
+                <button type="button" class="btn btn-primary" onclick="nextQuestion()" disabled id="nextBtn{{ forloop.counter }}">
+                    Next →
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Completion Message -->
+        <div class="completion-message" id="completionMessage" style="display: none;">
+            <div class="completion-icon">✨</div>
+            <h2 class="completion-title">Survey Complete!</h2>
+            <p class="completion-text">Generating your pre-filled argument card based on your responses. You'll be able to review and edit before publishing!</p>
+            <button type="submit" class="btn btn-primary" style="background: white; color: #10b981;">View My Card Preview →</button>
+        </div>
+    </form>
+</div>
+
+<script>
+let currentQuestionNum = 1;
+const totalQuestions = {{ questions.count }};
+const responses = {};
+
+// Handle option selection
+document.querySelectorAll('.option-bubble').forEach(bubble => {
+    bubble.addEventListener('click', function(e) {
+        e.preventDefault();
+        const questionId = this.dataset.questionId;
+        const optionId = this.dataset.optionId;
+        const input = this.querySelector('input[type="radio"], input[type="checkbox"]');
+        
+        if (input.type === 'radio') {
+            // Deselect all options for this question
+            document.querySelectorAll(`.option-bubble[data-question-id="${questionId}"]`).forEach(b => {
+                b.classList.remove('selected');
+                const inp = b.querySelector('input');
+                if (inp) inp.checked = false;
+            });
+            
+            // Select this option
+            this.classList.add('selected');
+            input.checked = true;
+        } else {
+            // Checkbox - toggle
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                input.checked = false;
+            } else {
+                this.classList.add('selected');
+                input.checked = true;
+            }
+        }
+        
+        // Check how many are selected for this question
+        const selected = document.querySelectorAll(`.option-bubble[data-question-id="${questionId}"].selected`);
+        console.log(`Question ${questionId}: ${selected.length} selected`);
+        
+        // Enable next button if at least one option selected for current question
+        const currentCard = document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`);
+        const currentQuestionId = currentCard.querySelector('.option-bubble').dataset.questionId;
+        const currentSelected = document.querySelectorAll(`.option-bubble[data-question-id="${currentQuestionId}"].selected`);
+        
+        const nextBtn = document.getElementById(`nextBtn${currentQuestionNum}`);
+        if (nextBtn) {
+            nextBtn.disabled = currentSelected.length === 0;
+            console.log(`Button enabled: ${currentSelected.length > 0}`);
+        }
+    });
+});
+
+function updateProgress() {
+    const progress = (currentQuestionNum / totalQuestions) * 100;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = progress + '%';
+    }
+    
+    // Update current question display
+    const currentDisplay = document.getElementById('currentQuestionDisplay');
+    if (currentDisplay) {
+        currentDisplay.textContent = currentQuestionNum;
+    }
+    
+    // Update step indicators
+    document.querySelectorAll('.progress-step').forEach((step, index) => {
+        const stepNum = index + 1;
+        
+        if (stepNum < currentQuestionNum) {
+            // Mark as completed
+            step.classList.add('completed');
+            step.classList.remove('active');
+        } else if (stepNum === currentQuestionNum) {
+            // Mark as active
+            step.classList.add('active');
+            step.classList.remove('completed');
+        } else {
+            // Not yet reached
+            step.classList.remove('active', 'completed');
+        }
+    });
+}
+
+function nextQuestion() {
+    // Check if current question has at least one selection
+    const currentCard = document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`);
+    const selectedOptions = currentCard.querySelectorAll('.option-bubble.selected');
+    
+    if (selectedOptions.length === 0) {
+        alert('Please select at least one option before continuing');
+        return;
+    }
+    
+    if (currentQuestionNum < totalQuestions) {
+        // Hide current question
+        currentCard.classList.remove('active');
+        
+        // Show next question
+        currentQuestionNum++;
+        document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`).classList.add('active');
+        
+        // Reset next button for new question
+        const nextBtn = document.getElementById(`nextBtn${currentQuestionNum}`);
+        const selectedInNext = document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`).querySelectorAll('.option-bubble.selected');
+        if (nextBtn) {
+            nextBtn.disabled = selectedInNext.length === 0;
+        }
+        
+        updateProgress();
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function previousQuestion() {
+    if (currentQuestionNum > 1) {
+        // Hide current question
+        document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`).classList.remove('active');
+        
+        // Show previous question
+        currentQuestionNum--;
+        document.querySelector(`.question-card[data-question="${currentQuestionNum}"]`).classList.add('active');
+        
+        updateProgress();
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function completeForm() {
+    // Hide all question cards
+    document.querySelectorAll('.question-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Show completion message
+    const completionMsg = document.getElementById('completionMessage');
+    if (completionMsg) {
+        completionMsg.classList.add('active');
+    }
+    
+    // Update progress to 100%
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = '100%';
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Initialize progress
+updateProgress();
+</script>
+{% endblock %}

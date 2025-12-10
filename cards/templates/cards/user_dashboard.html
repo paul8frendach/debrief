@@ -52,6 +52,29 @@
     margin-bottom: 16px;
 }
 
+
+.profile-bio {
+    font-size: 15px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin: 12px 0 16px 0;
+    max-width: 600px;
+}
+
+.profile-meta-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .profile-stats {
     display: flex;
     gap: 40px;
@@ -370,13 +393,101 @@
         flex-direction: column;
         text-align: center;
     }
-    .profile-stats {
+    
+.profile-bio {
+    font-size: 15px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin: 12px 0 16px 0;
+    max-width: 600px;
+}
+
+.profile-meta-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-stats {
         justify-content: center;
     }
     .profile-actions {
         flex-direction: column;
     }
 }
+
+.profile-completion-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-top: 24px;
+    margin-bottom: 32px;
+    color: white;
+}
+
+.completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.completion-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.completion-percentage {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.incomplete-fields {
+    margin-top: 12px;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.complete-link {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    margin-left: 12px;
+    transition: all 0.2s;
+}
+
+.complete-link:hover {
+    background: rgba(255,255,255,0.3);
+}
+
 {% endblock %}
 
 {% block content %}
@@ -391,13 +502,49 @@
         <a href="{% url 'account_email' %}" style="padding: 10px 20px; background: #fbbf24; color: #1a1a2e; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">Verify Email</a>
     </div>
     {% endif %}
-<div class="container">
+
+    {% if user.settings.profile_completion_percentage < 100 %}
+    <div class="profile-completion-banner">
+        <div class="completion-header">
+            <div class="completion-title">🎯 Complete Your Profile</div>
+            <div class="completion-percentage">{{ user.settings.profile_completion_percentage }}%</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ user.settings.profile_completion_percentage }}%"></div>
+        </div>
+        <div class="incomplete-fields">
+            Missing: {{ user.settings.incomplete_fields|join:", " }}
+            <a href="{% url 'user_settings' %}" class="complete-link">Complete Now →</a>
+        </div>
+    </div>
+    {% endif %}
+    <div class="container">
     <div class="profile-header">
         <div class="profile-banner">
-            <div class="profile-avatar-large">{{ user.username|slice:":2"|upper }}</div>
+            <div class="profile-avatar-large">
+                {% if user_settings.profile_picture %}
+                <img src="{{ user_settings.profile_picture.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                {{ user.username|slice:":2"|upper }}
+                {% endif %}
+            </div>
             <div class="profile-info">
                 <div class="profile-name">{{ user.username }}</div>
                 <div class="profile-username">@{{ user.username }}</div>
+                
+                {% if user_settings.bio %}
+                <div class="profile-bio">{{ user_settings.bio }}</div>
+                {% endif %}
+                
+                {% if user_settings.home_state %}
+                <div class="profile-meta-info">
+                    <div class="profile-meta-item">
+                        <span>📍</span>
+                        <span>{{ user_settings.get_home_state_display }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <div class="profile-stats">
                     <div class="profile-stat">
                         <span class="stat-number">{{ total_cards }}</span>

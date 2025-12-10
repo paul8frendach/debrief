@@ -1,0 +1,498 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Notebook - Debrief{% endblock %}
+
+{% block extra_style %}
+.notebook-wrapper {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.search-section {
+    margin-bottom: 24px;
+}
+
+.search-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.search-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.clear-btn {
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.search-results {
+    color: #a0a0c0;
+    font-size: 14px;
+    margin-top: 12px;
+    margin-left: 4px;
+}
+
+.notebook-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+}
+
+.notebook-sidebar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    height: fit-content;
+    position: sticky;
+    top: 120px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.filter-section {
+    margin-bottom: 24px;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a0a0c0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.filter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #d0d0e0;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+}
+
+.filter-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.filter-item.active {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+}
+
+.filter-count {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.notebook-content {
+    min-width: 0;
+}
+
+.notebook-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-info h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.header-info p {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.add-entry-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.add-entry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.entries-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.entry-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.2s;
+}
+
+.entry-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.entry-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.entry-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-youtube {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.badge-article {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+.badge-note {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fde68a;
+}
+
+.badge-quote {
+    background: rgba(168, 85, 247, 0.2);
+    color: #e9d5ff;
+}
+
+.badge-supporting {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.badge-opposing {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.badge-neutral {
+    background: rgba(156, 163, 175, 0.2);
+    color: #d1d5db;
+}
+
+.entry-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.entry-description {
+    font-size: 14px;
+    color: #b0b0c0;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.entry-content {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.youtube-embed {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.entry-link {
+    color: #667eea;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.entry-link:hover {
+    text-decoration: underline;
+}
+
+.entry-text {
+    color: #d0d0e0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.entry-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #808090;
+}
+
+.entry-meta {
+    display: flex;
+    gap: 16px;
+}
+
+.delete-btn {
+    padding: 6px 12px;
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-text {
+    font-size: 18px;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #a0a0c0;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .notebook-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .notebook-sidebar {
+        position: static;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="notebook-wrapper">
+    <!-- Search Bar -->
+    <div class="search-section">
+        <form method="GET" class="search-form">
+            <input type="text" name="search" class="search-input" placeholder="🔍 Search by title, description, or tags..." value="{{ search_query }}">
+            <button type="submit" class="search-btn">Search</button>
+            {% if search_query %}
+            <a href="{% url 'notebook' %}" class="clear-btn">Clear</a>
+            {% endif %}
+        </form>
+        {% if search_query %}
+        <div class="search-results">
+            Found {{ entries.count }} result{{ entries.count|pluralize }} for "{{ search_query }}"
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="notebook-layout">
+        <!-- Sidebar Filters -->
+        <div class="notebook-sidebar">
+            <div class="sidebar-title">📚 Notebook</div>
+            
+            <div class="filter-section">
+                <div class="filter-label">By Topic</div>
+                <a href="{% url 'notebook' %}" class="filter-item {% if not topic_filter %}active{% endif %}">
+                    <span>All Topics</span>
+                    <span class="filter-count">{{ entries.count }}</span>
+                </a>
+                {% for topic_code, topic_data in topic_counts.items %}
+                <a href="?topic={{ topic_code }}" class="filter-item {% if topic_filter == topic_code %}active{% endif %}">
+                    <span>{{ topic_data.name }}</span>
+                    <span class="filter-count">{{ topic_data.count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-label">By Type</div>
+                <a href="?type=youtube" class="filter-item {% if type_filter == 'youtube' %}active{% endif %}">
+                    <span>📺 YouTube</span>
+                </a>
+                <a href="?type=article" class="filter-item {% if type_filter == 'article' %}active{% endif %}">
+                    <span>📰 Articles</span>
+                </a>
+                <a href="?type=note" class="filter-item {% if type_filter == 'note' %}active{% endif %}">
+                    <span>📝 Notes</span>
+                </a>
+                <a href="?type=quote" class="filter-item {% if type_filter == 'quote' %}active{% endif %}">
+                    <span>💬 Quotes</span>
+                </a>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-label">By Stance</div>
+                <a href="?stance=supporting" class="filter-item {% if stance_filter == 'supporting' %}active{% endif %}">
+                    <span>✓ Supporting</span>
+                </a>
+                <a href="?stance=opposing" class="filter-item {% if stance_filter == 'opposing' %}active{% endif %}">
+                    <span>✗ Opposing</span>
+                </a>
+                <a href="?stance=neutral" class="filter-item {% if stance_filter == 'neutral' %}active{% endif %}">
+                    <span>◯ Neutral</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="notebook-content">
+            <div class="notebook-header">
+                <div class="header-info">
+                    <h1>My Research Notebook</h1>
+                    <p>Save YouTube clips, articles, and notes to reference when creating argument cards</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'add_notebook_entry' %}" class="add-entry-btn">+ Add Entry</a>
+                    <a href="{% url 'quick_save' %}" class="add-entry-btn" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 2px solid rgba(251, 191, 36, 0.3);">📌 Quick Save</a>
+                </div>
+            </div>
+            
+            {% if entries %}
+            <div class="entries-grid">
+                {% for entry in entries %}
+                <a href="{% url 'notebook_entry_detail' entry.id %}" style="text-decoration: none; color: inherit;">
+                <div class="entry-card">
+                    <div class="entry-badges">
+                        <span class="entry-badge badge-{{ entry.entry_type }}">{{ entry.get_entry_type_display }}</span>
+                        <span class="entry-badge badge-{{ entry.stance }}">{{ entry.get_stance_display }}</span>
+                        <span class="entry-badge" style="background: rgba(102, 126, 234, 0.2); color: #a0b5ff;">{{ entry.get_topic_display }}</span>
+                    </div>
+                    
+                    <div class="entry-title">{{ entry.title }}</div>
+                    
+                    {% if entry.description %}
+                    <div class="entry-description">
+                        {% if '📝 Auto-summary:' in entry.description %}
+                            📝 {{ entry.description|slice:"17:"|truncatewords:10 }}
+                        {% else %}
+                            {{ entry.description|truncatewords:15 }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="entry-footer">
+                        <div class="entry-meta">
+                            <span>{{ entry.created_at|timesince }} ago</span>
+                            {% if entry.tags %}
+                            <span>🏷️ {{ entry.tags }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📓</div>
+                <div class="empty-text">Your notebook is empty</div>
+                <div class="empty-subtext">Start saving research, YouTube clips, and notes to reference when creating cards</div>
+                <a href="{% url 'add_notebook_entry' %}" class="add-entry-btn">+ Add Your First Entry</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

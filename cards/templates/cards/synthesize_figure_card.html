@@ -1,0 +1,284 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Synthesize Public Figure Argument - Debrief{% endblock %}
+
+{% block extra_style %}
+.synthesize-container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.synthesize-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.header-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    color: #a0a0c0;
+}
+
+.form-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.section-description {
+    font-size: 14px;
+    color: #a0a0c0;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 15px;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.warning-box {
+    background: rgba(251, 191, 36, 0.15);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+
+.warning-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 8px;
+}
+
+.warning-text {
+    font-size: 14px;
+    color: #fde68a;
+    line-height: 1.6;
+}
+
+.argument-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.argument-item {
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #667eea;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.add-arg-btn {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="synthesize-container">
+    <div class="synthesize-header">
+        <h1 class="header-title">🎙️ Synthesize Public Figure Argument</h1>
+        <p class="header-subtitle">Create an argument card representing a public figure's position</p>
+    </div>
+
+    <form method="POST" class="form-panel">
+        {% csrf_token %}
+        
+        <div class="warning-box">
+            <div class="warning-title">⚠️ Important Guidelines</div>
+            <div class="warning-text">
+                • Only synthesize arguments that the public figure has actually expressed<br>
+                • Provide source links to original content (podcast, article, interview, etc.)<br>
+                • Cards will be marked as "Unverified" until the figure creates an account<br>
+                • Be fair and accurate in representing their position
+            </div>
+        </div>
+
+        <!-- Public Figure Info -->
+        <div style="margin-bottom: 32px;">
+            <div class="section-title">Source Information</div>
+            <div class="section-description">Who is this argument from?</div>
+            
+            <div class="form-group">
+                <label class="form-label">Public Figure Name</label>
+                <input type="text" name="original_source" class="form-input" placeholder="e.g., Joe Rogan, Alexandria Ocasio-Cortez" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Source URL</label>
+                <input type="url" name="source_url" class="form-input" placeholder="Link to podcast, article, or interview where they expressed this view" required>
+            </div>
+        </div>
+
+        <!-- Card Content -->
+        <div style="margin-bottom: 32px;">
+            <div class="section-title">Argument Details</div>
+            <div class="section-description">Synthesize their position into a structured argument</div>
+            
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" class="form-input" placeholder="Main claim or position" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Topic</label>
+                <select name="topic" class="form-select" required>
+                    <option value="">Select topic...</option>
+                    {% for code, name in topics %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Scope</label>
+                <select name="scope" class="form-select" required>
+                    <option value="federal">Federal</option>
+                    <option value="state">State</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Hypothesis (Their reasoning)</label>
+                <textarea name="hypothesis" class="form-textarea" placeholder="Why do they hold this position?" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Stance</label>
+                <select name="stance" class="form-select" required>
+                    <option value="for">For</option>
+                    <option value="against">Against</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Supporting Arguments -->
+        <div style="margin-bottom: 32px;">
+            <div class="section-title">Supporting Points</div>
+            <div class="section-description">Key arguments they made in support</div>
+            
+            <div id="supportingArgs" class="argument-list">
+                <div class="argument-item">
+                    <label class="form-label">Supporting Point #1</label>
+                    <input type="text" name="supporting_args[]" class="form-input" required>
+                </div>
+            </div>
+            
+            <button type="button" class="add-arg-btn" onclick="addArgument('supporting')">+ Add Supporting Point</button>
+        </div>
+
+        <!-- Opposing Arguments -->
+        <div style="margin-bottom: 32px;">
+            <div class="section-title">Opposing Points (Acknowledged)</div>
+            <div class="section-description">Counterarguments they acknowledged or addressed</div>
+            
+            <div id="opposingArgs" class="argument-list">
+                <div class="argument-item">
+                    <label class="form-label">Opposing Point #1</label>
+                    <input type="text" name="opposing_args[]" class="form-input" required>
+                </div>
+            </div>
+            
+            <button type="button" class="add-arg-btn" onclick="addArgument('opposing')">+ Add Opposing Point</button>
+        </div>
+
+        <!-- Conclusion -->
+        <div style="margin-bottom: 32px;">
+            <div class="form-group">
+                <label class="form-label">Conclusion</label>
+                <textarea name="conclusion" class="form-textarea" placeholder="Their overall conclusion or recommendation" required></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">🚀 Publish to Commons</button>
+    </form>
+</div>
+
+<script>
+function addArgument(type) {
+    const container = document.getElementById(type + 'Args');
+    const count = container.children.length + 1;
+    const label = type === 'supporting' ? 'Supporting' : 'Opposing';
+    
+    const div = document.createElement('div');
+    div.className = 'argument-item';
+    div.innerHTML = `
+        <label class="form-label">${label} Point #${count}</label>
+        <input type="text" name="${type}_args[]" class="form-input" required>
+    `;
+    container.appendChild(div);
+}
+</script>
+{% endblock %}

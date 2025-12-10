@@ -1,0 +1,304 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Argument History - {{ card.title }} - Debrief{% endblock %}
+
+{% block extra_style %}
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.container {
+    max-width: 1200px !important;
+    margin: 40px auto !important;
+    padding: 0 20px;
+}
+
+.back-link {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.history-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.history-header {
+    margin-bottom: 32px;
+}
+
+.history-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.history-subtitle {
+    font-size: 16px;
+    color: #6b7280;
+}
+
+.current-version {
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    border: 3px solid #667eea;
+}
+
+.current-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.version-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+}
+
+.version-meta {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.version-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.version-content {
+    margin-top: 16px;
+}
+
+.content-section {
+    margin-bottom: 16px;
+}
+
+.content-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.content-text {
+    color: #374151;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.stance-badge {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.history-timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.history-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.version-item {
+    position: relative;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.version-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.version-item::before {
+    content: '';
+    position: absolute;
+    left: -33px;
+    top: 24px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #667eea;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+.version-number {
+    font-size: 14px;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.version-date {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.version-changes {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    border-left: 3px solid #667eea;
+}
+
+.change-item {
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.change-item:last-child {
+    margin-bottom: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.empty-subtext {
+    font-size: 14px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'card_detail' card.id %}" class="back-link">← Back to Card</a>
+    
+    <div class="history-panel">
+        <div class="history-header">
+            <h1 class="history-title">📜 Argument History</h1>
+            <p class="history-subtitle">Track how your position has evolved over time</p>
+        </div>
+
+        <!-- Current Version -->
+        <div class="current-version">
+            <span class="current-badge">✨ Current Version</span>
+            <h2 class="version-title">{{ card.title }}</h2>
+            
+            <div class="version-meta">
+                <div class="version-meta-item">
+                    <span>📅</span>
+                    <span>Last updated {{ card.updated_at|timesince }} ago</span>
+                </div>
+                <div class="version-meta-item">
+                    <span>👤</span>
+                    <span>{{ card.user.username }}</span>
+                </div>
+                <div class="version-meta-item">
+                    <span class="stance-badge">{{ card.stance|upper }}</span>
+                </div>
+            </div>
+
+            <div class="version-content">
+                <div class="content-section">
+                    <div class="content-label">Hypothesis</div>
+                    <div class="content-text">{{ card.hypothesis }}</div>
+                </div>
+                <div class="content-section">
+                    <div class="content-label">Conclusion</div>
+                    <div class="content-text">{{ card.conclusion }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version History -->
+        {% if versions %}
+        <h2 style="font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px;">Previous Versions</h2>
+        
+        <div class="history-timeline">
+            {% for version in versions %}
+            <div class="version-item">
+                <div class="version-number">Version {{ version.version_number }}</div>
+                <div class="version-date">{{ version.created_at|date:"F d, Y at g:i A" }}</div>
+                
+                <h3 style="font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px;">{{ version.title }}</h3>
+                
+                <div class="version-changes">
+                    <div class="change-item">
+                        <strong>Stance:</strong> <span class="stance-badge">{{ version.stance|upper }}</span>
+                    </div>
+                    <div class="change-item">
+                        <strong>Hypothesis:</strong> {{ version.hypothesis|truncatewords:20 }}
+                    </div>
+                    <div class="change-item">
+                        <strong>Conclusion:</strong> {{ version.conclusion|truncatewords:20 }}
+                    </div>
+                    {% if version.change_summary %}
+                    <div class="change-item" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                        <strong>Changes:</strong> {{ version.change_summary }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">No previous versions yet</div>
+            <div class="empty-subtext">Edit your card to create version history</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Quick Save - Debrief{% endblock %}
+
+{% block extra_style %}
+.quick-save-container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.header-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.header-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    color: #a0a0c0;
+    line-height: 1.6;
+}
+
+.feature-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.section-description {
+    font-size: 14px;
+    color: #a0a0c0;
+    margin-bottom: 24px;
+}
+
+.steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0;
+}
+
+.step-item {
+    background: rgba(255,255,255,0.03);
+    border-left: 4px solid #667eea;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+.step-number {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 32px;
+    font-weight: 700;
+    margin-right: 12px;
+}
+
+.step-text {
+    color: #d0d0e0;
+    font-size: 15px;
+}
+
+.code-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #10b981;
+    overflow-x: auto;
+    margin: 12px 0;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.copy-btn {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.copy-btn:hover {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.alternative-method {
+    background: rgba(251, 191, 36, 0.1);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+.alternative-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 8px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="quick-save-container">
+    <div class="header-section">
+        <h1 class="header-title">📌 Quick Save to Notebook</h1>
+        <p class="header-subtitle">Save YouTube videos and articles directly from your browser to your Debrief notebook</p>
+    </div>
+
+    <!-- Manual Bookmark Creation -->
+    <div class="feature-section">
+        <h2 class="section-title">Create a Quick Save Bookmark</h2>
+        <p class="section-description">Follow these steps to create a bookmark that saves pages to your notebook</p>
+        
+        <ul class="steps-list">
+            <li class="step-item">
+                <span class="step-number">1</span>
+                <span class="step-text">Right-click your bookmarks bar and select "Add Page" or "Add Bookmark"</span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">2</span>
+                <span class="step-text">Name it: <strong>📌 Save to Debrief</strong></span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">3</span>
+                <span class="step-text">Copy the code below and paste it as the URL:</span>
+            </li>
+        </ul>
+
+        <div class="code-box" id="bookmarkletCode">javascript:(function(){window.open('http://127.0.0.1:8000/notebook/add/?url='+encodeURIComponent(window.location.href)+'&title='+encodeURIComponent(document.title)+'&popup=1','debriefSave','width=800,height=700,scrollbars=yes');})();</div>
+        
+        <button class="copy-btn" onclick="copyBookmarklet()">📋 Copy Code</button>
+
+        <ul class="steps-list" style="margin-top: 24px;">
+            <li class="step-item">
+                <span class="step-number">4</span>
+                <span class="step-text">Save the bookmark</span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">5</span>
+                <span class="step-text">Go to any YouTube video or article</span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">6</span>
+                <span class="step-text">Click your "📌 Save to Debrief" bookmark - a popup will open!</span>
+            </li>
+        </ul>
+
+        <div class="alternative-method">
+            <div class="alternative-title">🎥 Video Instructions</div>
+            <p style="color: #d0d0e0; font-size: 14px; line-height: 1.6;">
+                Watch a quick demo: <a href="https://www.loom.com" target="_blank" style="color: #fbbf24;">Coming soon</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Manual Method -->
+    <div class="feature-section">
+        <h2 class="section-title">Alternative: Copy & Paste</h2>
+        <p class="section-description">The traditional way if the bookmark doesn't work</p>
+        
+        <ul class="steps-list">
+            <li class="step-item">
+                <span class="step-number">1</span>
+                <span class="step-text">Copy the URL from your browser</span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">2</span>
+                <span class="step-text">Go to <a href="{% url 'notebook' %}" style="color: #667eea;">Notebook</a> → Add Entry</span>
+            </li>
+            <li class="step-item">
+                <span class="step-number">3</span>
+                <span class="step-text">Paste and save</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Mobile Tip -->
+    <div class="feature-section">
+        <h2 class="section-title">📱 Mobile Users</h2>
+        <p class="section-description">On mobile, use the Share button and copy link</p>
+        
+        <div class="alternative-method">
+            <div class="alternative-title">💡 iOS Safari Tip</div>
+            <p style="color: #d0d0e0; font-size: 14px; line-height: 1.6;">
+                You can also create a bookmark in Safari mobile, but it's easier to just use the Share → Copy Link method and paste into Debrief.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyBookmarklet() {
+    const code = document.getElementById('bookmarkletCode').textContent;
+    navigator.clipboard.writeText(code).then(function() {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(function() {
+            btn.textContent = '📋 Copy Code';
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

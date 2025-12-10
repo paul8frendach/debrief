@@ -1,0 +1,347 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Policy Surveys - Debrief{% endblock %}
+
+{% block extra_style %}
+.surveys-container {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.surveys-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 48px;
+    margin-bottom: 40px;
+    color: white;
+    text-align: center;
+}
+
+.header-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.header-subtitle {
+    font-size: 18px;
+    opacity: 0.95;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.scope-tabs {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.scope-tab {
+    padding: 14px 32px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.2);
+    color: #a0a0c0;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.scope-tab:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    color: white;
+}
+
+.scope-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+}
+
+.scope-section {
+    margin-bottom: 48px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+.section-icon {
+    font-size: 32px;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    color: #808090;
+    margin-left: auto;
+}
+
+.surveys-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.survey-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.survey-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.survey-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.survey-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.survey-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-topic {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+}
+
+.badge-questions {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.survey-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.survey-description {
+    font-size: 14px;
+    color: #a0a0c0;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.survey-action {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-text {
+    font-size: 18px;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #a0a0c0;
+}
+
+.alternative-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 48px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.alt-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.alt-description {
+    font-size: 14px;
+    color: #a0a0c0;
+    margin-bottom: 20px;
+}
+
+.alt-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 12px 32px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.alt-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="surveys-container">
+    <div class="surveys-header">
+        <h1 class="header-title">📊 Policy Surveys</h1>
+        <p class="header-subtitle">
+            Answer questions on key policy issues and we'll generate a personalized argument card based on your responses
+        </p>
+    </div>
+
+    <!-- Scope Tabs -->
+    <div class="scope-tabs">
+        <a href="{% url 'survey_list' %}" class="scope-tab {% if not scope_filter %}active{% endif %}">
+            🌐 All Surveys
+        </a>
+        <a href="?scope=federal" class="scope-tab {% if scope_filter == 'federal' %}active{% endif %}">
+            🏛️ Federal Issues
+        </a>
+        <a href="?scope=state" class="scope-tab {% if scope_filter == 'state' %}active{% endif %}">
+            🗺️ State Issues
+        </a>
+    </div>
+
+    {% if not scope_filter %}
+    <!-- Federal Surveys Section -->
+    {% if federal_surveys %}
+    <div class="scope-section">
+        <div class="section-header">
+            <span class="section-icon">🏛️</span>
+            <h2 class="section-title">Federal Policy Issues</h2>
+            <span class="section-subtitle">{{ federal_surveys.count }} survey{{ federal_surveys.count|pluralize }}</span>
+        </div>
+        <div class="surveys-grid">
+            {% for survey in federal_surveys %}
+            <a href="{% url 'topic_survey' survey.topic %}" class="survey-card">
+                <div class="survey-icon">📋</div>
+                <div class="survey-badges">
+                    <span class="survey-badge badge-topic">{{ survey.get_topic_display }}</span>
+                    <span class="survey-badge badge-questions">{{ survey.questions.count }} Questions</span>
+                </div>
+                <h3 class="survey-title">{{ survey.title }}</h3>
+                <p class="survey-description">{{ survey.description|truncatewords:15 }}</p>
+                <span class="survey-action">Start Survey →</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- State Surveys Section -->
+    {% if state_surveys %}
+    <div class="scope-section">
+        <div class="section-header">
+            <span class="section-icon">🗺️</span>
+            <h2 class="section-title">State & Local Policy Issues</h2>
+            <span class="section-subtitle">{{ state_surveys.count }} survey{{ state_surveys.count|pluralize }}</span>
+        </div>
+        <div class="surveys-grid">
+            {% for survey in state_surveys %}
+            <a href="{% url 'topic_survey' survey.topic %}" class="survey-card">
+                <div class="survey-icon">📋</div>
+                <div class="survey-badges">
+                    <span class="survey-badge badge-topic">{{ survey.get_topic_display }}</span>
+                    <span class="survey-badge badge-questions">{{ survey.questions.count }} Questions</span>
+                </div>
+                <h3 class="survey-title">{{ survey.title }}</h3>
+                <p class="survey-description">{{ survey.description|truncatewords:15 }}</p>
+                <span class="survey-action">Start Survey →</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- Filtered View -->
+    {% if surveys %}
+    <div class="surveys-grid">
+        {% for survey in surveys %}
+        <a href="{% url 'topic_survey' survey.topic %}" class="survey-card">
+            <div class="survey-icon">📋</div>
+            <div class="survey-badges">
+                <span class="survey-badge badge-topic">{{ survey.get_topic_display }}</span>
+                <span class="survey-badge badge-questions">{{ survey.questions.count }} Questions</span>
+            </div>
+            <h3 class="survey-title">{{ survey.title }}</h3>
+            <p class="survey-description">{{ survey.description|truncatewords:15 }}</p>
+            <span class="survey-action">Start Survey →</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if not surveys %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p class="empty-text">No surveys available yet</p>
+        <p class="empty-subtext">Check back soon for new policy surveys!</p>
+    </div>
+    {% endif %}
+
+    <div class="alternative-section">
+        <h2 class="alt-title">✨ Prefer a Guided Approach?</h2>
+        <p class="alt-description">
+            Use our step-by-step wizard to create your argument card from scratch
+        </p>
+        <a href="{% url 'create_card_wizard' %}" class="alt-btn">
+            Use Guided Wizard Instead →
+        </a>
+    </div>
+</div>
+{% endblock %}

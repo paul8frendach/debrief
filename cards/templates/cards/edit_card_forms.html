@@ -1,0 +1,576 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Edit Card - Debrief{% endblock %}
+
+{% block extra_style %}
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.container {
+    max-width: 1400px !important;
+    margin: 40px auto !important;
+    padding: 0 20px;
+}
+
+.back-link {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.history-btn {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 24px;
+    margin-left: 12px;
+    font-weight: 600;
+}
+
+.history-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.edit-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.panel {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    height: fit-content;
+}
+
+.preview-panel {
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.panel-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid #667eea;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.required {
+    color: #ef4444;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: #1a1a2e;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.argument-card {
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 2px solid #e5e7eb;
+}
+
+.argument-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.argument-type {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.pro-type {
+    color: #10b981;
+}
+
+.con-type {
+    color: #ef4444;
+}
+
+.btn-remove {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-add {
+    width: 100%;
+    padding: 12px 24px;
+    background: #f3f4f6;
+    border: 2px dashed #9ca3af;
+    color: #6b7280;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+}
+
+.btn-add:hover {
+    background: #e5e7eb;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* Preview Styles */
+.preview-card {
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.preview-scope {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.preview-topic {
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.preview-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+}
+
+.preview-section {
+    margin-bottom: 20px;
+}
+
+.preview-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.preview-text {
+    color: #374151;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.preview-arguments {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.preview-arg-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.preview-arg-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.pros-title {
+    color: #10b981;
+}
+
+.cons-title {
+    color: #ef4444;
+}
+
+.preview-arg-item {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.preview-arg-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.preview-arg-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.preview-arg-summary {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.empty-state {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 20px;
+    font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+    .edit-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-panel {
+        position: static;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'card_detail' card.id %}" class="back-link">← Back to Card</a>
+    <a href="{% url 'card_history' card.id %}" class="history-btn">📜 Argument History</a>
+    
+    <div class="edit-container">
+        <!-- Form Panel -->
+        <div class="panel">
+            <h1 class="panel-title">Edit Argument Card</h1>
+            
+            <form method="POST" id="editForm">
+                {% csrf_token %}
+                {{ argument_formset.management_form }}
+                
+                <!-- Card Details -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Scope <span class="required">*</span></label>
+                        {{ form.scope }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Visibility <span class="required">*</span></label>
+                        {{ form.visibility }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Topic <span class="required">*</span></label>
+                    {{ form.topic }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Subcategory</label>
+                    {{ form.subcategory }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Card Title <span class="required">*</span></label>
+                    {{ form.title }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Stance <span class="required">*</span></label>
+                    {{ form.stance }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Hypothesis <span class="required">*</span></label>
+                    {{ form.hypothesis }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Conclusion <span class="required">*</span></label>
+                    {{ form.conclusion }}
+                </div>
+
+                <!-- Supporting Arguments -->
+                <div class="form-group">
+                    <label class="form-label">Supporting Arguments (Pros)</label>
+                    <div id="prosContainer">
+                        {% for arg_form in argument_formset %}
+                        {% if arg_form.instance.type == 'pro' %}
+                        <div class="argument-card" data-type="supporting">
+                            <div class="argument-header">
+                                <span class="argument-type pro-type">✓ PRO Argument</span>
+                                <button type="button" class="btn-remove" onclick="removeArgument(this)">Remove</button>
+                            </div>
+                            {{ arg_form.id }}
+                            {{ arg_form.type }}
+                            <input type="text" class="form-input" name="supporting_summary[]" placeholder="Summary" value="{{ arg_form.instance.summary }}" style="margin-bottom: 8px;" onkeyup="updatePreview()">
+                            <textarea class="form-textarea" name="supporting_detail[]" placeholder="Detail" onkeyup="updatePreview()">{{ arg_form.instance.detail }}</textarea>
+                            <input type="text" class="form-input" name="supporting_sources[]" placeholder="Sources" value="{{ arg_form.instance.sources }}" style="margin-top: 8px;">
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn-add" onclick="addArgument('supporting')">+ Add Pro Argument</button>
+                </div>
+
+                <!-- Opposing Arguments -->
+                <div class="form-group">
+                    <label class="form-label">Opposing Arguments (Cons)</label>
+                    <div id="consContainer">
+                        {% for arg_form in argument_formset %}
+                        {% if arg_form.instance.type == 'con' %}
+                        <div class="argument-card" data-type="opposing">
+                            <div class="argument-header">
+                                <span class="argument-type con-type">✗ CON Argument</span>
+                                <button type="button" class="btn-remove" onclick="removeArgument(this)">Remove</button>
+                            </div>
+                            {{ arg_form.id }}
+                            {{ arg_form.type }}
+                            <input type="text" class="form-input" name="opposing_summary[]" placeholder="Summary" value="{{ arg_form.instance.summary }}" style="margin-bottom: 8px;" onkeyup="updatePreview()">
+                            <textarea class="form-textarea" name="opposing_detail[]" placeholder="Detail" onkeyup="updatePreview()">{{ arg_form.instance.detail }}</textarea>
+                            <input type="text" class="form-input" name="opposing_sources[]" placeholder="Sources" value="{{ arg_form.instance.sources }}" style="margin-top: 8px;">
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn-add" onclick="addArgument('opposing')">+ Add Con Argument</button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    <a href="{% url 'card_detail' card.id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="panel preview-panel">
+            <h1 class="panel-title">Live Preview</h1>
+            <div class="preview-card">
+                <span class="preview-scope" id="previewScope">{{ card.get_scope_display|upper }}</span>
+                <div class="preview-topic" id="previewTopic">{{ card.get_topic_display }}</div>
+                <h2 class="preview-title" id="previewTitle">{{ card.title }}</h2>
+                
+                <div class="preview-section">
+                    <div class="preview-label">Hypothesis</div>
+                    <div class="preview-text" id="previewHypothesis">{{ card.hypothesis }}</div>
+                </div>
+
+                <div class="preview-arguments">
+                    <div class="preview-arg-section">
+                        <div class="preview-arg-title pros-title">✓ Supporting (Pros)</div>
+                        <div id="previewPros" class="empty-state">No pro arguments yet</div>
+                    </div>
+                    <div class="preview-arg-section">
+                        <div class="preview-arg-title cons-title">✗ Opposing (Cons)</div>
+                        <div id="previewCons" class="empty-state">No con arguments yet</div>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-label">Conclusion</div>
+                    <div class="preview-text" id="previewConclusion">{{ card.conclusion }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let proCount = {{ argument_formset.forms|length }};
+let conCount = {{ argument_formset.forms|length }};
+
+function addArgument(type) {
+    const container = type === 'supporting' ? document.getElementById('prosContainer') : document.getElementById('consContainer');
+    const count = type === 'supporting' ? ++proCount : ++conCount;
+    const label = type === 'supporting' ? 'PRO' : 'CON';
+    const typeClass = type === 'supporting' ? 'pro-type' : 'con-type';
+    
+    const argDiv = document.createElement('div');
+    argDiv.className = 'argument-card';
+    argDiv.setAttribute('data-type', type);
+    argDiv.innerHTML = `
+        <div class="argument-header">
+            <span class="argument-type ${typeClass}">${type === 'supporting' ? '✓' : '✗'} ${label} Argument</span>
+            <button type="button" class="btn-remove" onclick="removeArgument(this)">Remove</button>
+        </div>
+        <input type="text" class="form-input" name="${type}_summary[]" placeholder="Summary" style="margin-bottom: 8px;" onkeyup="updatePreview()">
+        <textarea class="form-textarea" name="${type}_detail[]" placeholder="Detail" onkeyup="updatePreview()"></textarea>
+        <input type="text" class="form-input" name="${type}_sources[]" placeholder="Sources (comma-separated)" style="margin-top: 8px;">
+    `;
+    container.appendChild(argDiv);
+    updatePreview();
+}
+
+function removeArgument(btn) {
+    btn.closest('.argument-card').remove();
+    updatePreview();
+}
+
+function updatePreview() {
+    // Update title
+    const title = document.querySelector('[name="title"]')?.value || 'Card Title';
+    document.getElementById('previewTitle').textContent = title;
+    
+    // Update hypothesis
+    const hypothesis = document.querySelector('[name="hypothesis"]')?.value || 'Your hypothesis...';
+    document.getElementById('previewHypothesis').textContent = hypothesis;
+    
+    // Update conclusion
+    const conclusion = document.querySelector('[name="conclusion"]')?.value || 'Your conclusion...';
+    document.getElementById('previewConclusion').textContent = conclusion;
+    
+    // Update topic
+    const topic = document.querySelector('[name="topic"]');
+    if (topic) {
+        document.getElementById('previewTopic').textContent = topic.options[topic.selectedIndex].text;
+    }
+    
+    // Update scope
+    const scope = document.querySelector('[name="scope"]');
+    if (scope) {
+        document.getElementById('previewScope').textContent = scope.options[scope.selectedIndex].text.toUpperCase();
+    }
+    
+    // Update arguments
+    updateArgumentPreview('supporting', 'previewPros');
+    updateArgumentPreview('opposing', 'previewCons');
+}
+
+function updateArgumentPreview(type, previewId) {
+    const container = document.getElementById(previewId);
+    const args = document.querySelectorAll(`.argument-card[data-type="${type}"]`);
+    
+    if (args.length === 0) {
+        container.innerHTML = '<div class="empty-state">No ' + type + ' arguments yet</div>';
+        return;
+    }
+    
+    let html = '';
+    args.forEach(arg => {
+        const summary = arg.querySelector('input[name*="summary"]')?.value || 'Untitled';
+        const detail = arg.querySelector('textarea')?.value || 'No detail';
+        
+        html += `
+            <div class="preview-arg-item">
+                <div class="preview-arg-name">${summary}</div>
+                <div class="preview-arg-summary">${detail.substring(0, 100)}${detail.length > 100 ? '...' : ''}</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Event listeners for live preview
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('input', updatePreview);
+        el.addEventListener('change', updatePreview);
+    });
+    updatePreview();
+});
+</script>
+{% endblock %}
+

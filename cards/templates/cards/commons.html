@@ -1,0 +1,291 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Debrief Commons - Debrief{% endblock %}
+
+{% block extra_style %}
+.commons-container {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.commons-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.commons-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.commons-description {
+    font-size: 16px;
+    color: #b0b0c0;
+    max-width: 600px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+}
+
+.action-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.action-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 32px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: block;
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+}
+
+.action-card.orange {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.action-card.orange:hover {
+    box-shadow: 0 12px 32px rgba(251, 191, 36, 0.4);
+}
+
+.action-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.action-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.action-description {
+    font-size: 14px;
+    opacity: 0.95;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.action-btn {
+    display: inline-block;
+    background: white;
+    color: #667eea;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.action-card.orange .action-btn {
+    color: #d97706;
+}
+
+.admin-section {
+    background: rgba(251, 191, 36, 0.15);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.admin-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fbbf24;
+    margin-bottom: 8px;
+}
+
+.admin-description {
+    font-size: 14px;
+    color: #fde68a;
+    margin-bottom: 16px;
+}
+
+.admin-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.commons-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-bottom: 40px;
+    padding: 24px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: #667eea;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #808090;
+    margin-top: 4px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.commons-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.commons-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.card-badge {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.2);
+    color: #a0b5ff;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.card-meta {
+    font-size: 13px;
+    color: #808090;
+}
+
+@media (max-width: 768px) {
+    .action-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .commons-stats {
+        flex-direction: column;
+        gap: 24px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="commons-container">
+    <div class="commons-header">
+        <h1 class="commons-title">🏛️ Debrief Commons</h1>
+        <p class="commons-description">
+            Public arguments and policy discussions. Create your own argument card through surveys or guided creation.
+        </p>
+    </div>
+
+    <!-- Action Cards for All Users -->
+    <div class="action-cards">
+        <!-- Survey Option -->
+        <a href="{% url 'survey_list' %}" class="action-card">
+            <div class="action-icon">📊</div>
+            <h3 class="action-title">Take a Policy Survey</h3>
+            <p class="action-description">
+                Answer questions on trending topics and we'll generate your argument card based on your responses.
+            </p>
+            <span class="action-btn">Browse Surveys →</span>
+        </a>
+        
+        <!-- Wizard Option -->
+        <a href="{% url 'create_card_wizard' %}" class="action-card orange">
+            <div class="action-icon">✨</div>
+            <h3 class="action-title">Guided Card Creation</h3>
+            <p class="action-description">
+                Step-by-step wizard to build your argument card with questions and prompts.
+            </p>
+            <span class="action-btn">Start Wizard →</span>
+        </a>
+    </div>
+
+    <!-- Admin Section (Only for Commons User) -->
+    {% if user.username == 'DebriefCommons' or user.is_staff %}
+    <div class="admin-section">
+        <h3 class="admin-title">🛠️ Commons Admin Tools</h3>
+        <p class="admin-description">Create argument cards representing public figures' positions</p>
+        <a href="{% url 'synthesize_figure_card' %}" class="admin-btn">
+            🎙️ Synthesize Public Figure Argument
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="commons-stats">
+        <div class="stat-item">
+            <div class="stat-number">{{ cards.count }}</div>
+            <div class="stat-label">Public Cards</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ cards|length }}</div>
+            <div class="stat-label">Active Topics</div>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    {% if cards %}
+    <div class="cards-grid">
+        {% for card in cards %}
+        <a href="{% url 'card_detail' card.id %}" class="commons-card">
+            <span class="card-badge">Commons</span>
+            <h3 class="card-title">{{ card.title }}</h3>
+            <p class="card-meta">
+                {{ card.get_topic_display }} • {{ card.created_at|timesince }} ago
+            </p>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px; color: #808090;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🏛️</div>
+        <p style="font-size: 18px; color: white; margin-bottom: 8px;">No public cards yet</p>
+        <p style="font-size: 14px;">Be the first to create an argument card!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

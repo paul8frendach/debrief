@@ -159,10 +159,12 @@
         
         <div class="nav-tabs">
             <a href="/" class="nav-tab {% block nav_feed %}{% endblock %}">Feed</a>
+            <a href="{% url 'commons' %}" class="nav-tab">🏛️ Commons</a>
             <a href="{% url 'explore' %}" class="nav-tab {% block nav_explore %}{% endblock %}">Explore</a>
             {% if user.is_authenticated %}
             <a href="{% url 'friends_feed' %}" class="nav-tab {% block nav_friends %}{% endblock %}">Friends</a>
             <a href="{% url 'user_dashboard' %}" class="nav-tab {% block nav_dashboard %}{% endblock %}">My Profile</a>
+            <a href="{% url 'notebook' %}" class="nav-tab">📓 Notebook</a>
             <a href="{% url 'friend_requests' %}" class="nav-tab" style="position: relative;">
                 👥
                 <span class="notification-badge" id="friendRequestBadge">0</span>

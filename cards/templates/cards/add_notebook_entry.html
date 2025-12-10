@@ -1,0 +1,374 @@
+{% extends 'cards/base.html' %}
+
+{% block title %}Add Notebook Entry - Debrief{% endblock %}
+
+{% block extra_style %}
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.container {
+    max-width: 900px !important;
+    margin: 60px auto !important;
+    padding: 0 20px;
+}
+
+.back-link {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 24px;
+    font-weight: 600;
+}
+
+.add-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 48px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.panel-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.panel-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 32px;
+}
+
+.form-group {
+    margin-bottom: 28px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.required {
+    color: #ef4444;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    background: white;
+    color: #1a1a2e;
+    transition: all 0.2s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-select {
+    cursor: pointer;
+}
+
+.form-help {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.type-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.type-option {
+    padding: 20px;
+    border: 3px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.type-option:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.type-option.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.type-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.type-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.stance-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stance-option {
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stance-option:hover {
+    border-color: #667eea;
+}
+
+.stance-option.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.stance-supporting.selected {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.stance-opposing.selected {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.stance-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+    .type-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'notebook' %}" class="back-link">← Back to Notebook</a>
+    
+    <div class="add-panel">
+        <h1 class="panel-title">Add Notebook Entry</h1>
+        <p class="panel-subtitle">Save research, YouTube videos, articles, or notes</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <!-- Entry Type Selector -->
+            <div class="form-group">
+                <label class="form-label">Entry Type <span class="required">*</span></label>
+                <div class="type-selector">
+                    <div class="type-option selected" onclick="selectType('youtube')">
+                        <div class="type-icon">📺</div>
+                        <div class="type-label">YouTube</div>
+                    </div>
+                    <div class="type-option" onclick="selectType('article')">
+                        <div class="type-icon">📰</div>
+                        <div class="type-label">Article</div>
+                    </div>
+                    <div class="type-option" onclick="selectType('note')">
+                        <div class="type-icon">📝</div>
+                        <div class="type-label">Note</div>
+                    </div>
+                    <div class="type-option" onclick="selectType('quote')">
+                        <div class="type-icon">💬</div>
+                        <div class="type-label">Quote</div>
+                    </div>
+                </div>
+                <input type="hidden" name="entry_type" id="entry_type" value="youtube" required>
+            </div>
+            
+            <!-- Title -->
+            <div class="form-group">
+                <label class="form-label" for="title">Title <span class="required">*</span></label>
+                <input type="text" name="title" id="title" class="form-input" placeholder="Give this entry a title" required>
+            </div>
+            
+            <!-- Content (changes based on type) -->
+            <div class="form-group">
+                <label class="form-label" for="content">
+                    <span id="content-label">YouTube URL</span> <span class="required">*</span>
+                </label>
+                <input type="text" name="content" id="content" class="form-input" placeholder="https://youtube.com/watch?v=..." required>
+                <textarea name="content_text" id="content_text" class="form-textarea" placeholder="Enter your note or quote here..." style="display: none;"></textarea>
+                <div class="form-help" id="content-help">Paste the full YouTube URL</div>
+            </div>
+            
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea name="description" id="description" class="form-textarea" placeholder="Add notes about why this is relevant..." style="min-height: 80px;"></textarea>
+            </div>
+            
+            <!-- Topic -->
+            <div class="form-group">
+                <label class="form-label" for="topic">Topic <span class="required">*</span></label>
+                <select name="topic" id="topic" class="form-select" required>
+                    <option value="">Select a topic...</option>
+                    {% for code, name in topics %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Stance -->
+            <div class="form-group">
+                <label class="form-label">Stance <span class="required">*</span></label>
+                <div class="stance-selector">
+                    <div class="stance-option stance-supporting" onclick="selectStance('supporting')">
+                        <div class="type-icon" style="font-size: 20px;">✓</div>
+                        <div class="stance-label">Supporting</div>
+                    </div>
+                    <div class="stance-option stance-opposing" onclick="selectStance('opposing')">
+                        <div class="type-icon" style="font-size: 20px;">✗</div>
+                        <div class="stance-label">Opposing</div>
+                    </div>
+                    <div class="stance-option selected" onclick="selectStance('neutral')">
+                        <div class="type-icon" style="font-size: 20px;">◯</div>
+                        <div class="stance-label">Neutral</div>
+                    </div>
+                </div>
+                <input type="hidden" name="stance" id="stance" value="neutral" required>
+            </div>
+            
+            <!-- Tags -->
+            <div class="form-group">
+                <label class="form-label" for="tags">Tags</label>
+                <input type="text" name="tags" id="tags" class="form-input" placeholder="research, statistics, expert opinion (comma-separated)">
+                <div class="form-help">Add tags to organize your entries</div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Save Entry</button>
+                <a href="{% url 'notebook' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function selectType(type) {
+    // Update UI
+    document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    
+    // Update hidden input
+    document.getElementById('entry_type').value = type;
+    
+    // Update content field
+    const contentInput = document.getElementById('content');
+    const contentTextarea = document.getElementById('content_text');
+    const contentLabel = document.getElementById('content-label');
+    const contentHelp = document.getElementById('content-help');
+    
+    if (type === 'youtube') {
+        contentInput.style.display = 'block';
+        contentTextarea.style.display = 'none';
+        contentInput.name = 'content';
+        contentTextarea.name = '';
+        contentLabel.textContent = 'YouTube URL';
+        contentInput.placeholder = 'https://youtube.com/watch?v=...';
+        contentHelp.textContent = 'Paste the full YouTube URL';
+    } else if (type === 'article') {
+        contentInput.style.display = 'block';
+        contentTextarea.style.display = 'none';
+        contentInput.name = 'content';
+        contentTextarea.name = '';
+        contentLabel.textContent = 'Article URL';
+        contentInput.placeholder = 'https://...';
+        contentHelp.textContent = 'Paste the article link';
+    } else {
+        contentInput.style.display = 'none';
+        contentTextarea.style.display = 'block';
+        contentInput.name = '';
+        contentTextarea.name = 'content';
+        contentLabel.textContent = type === 'note' ? 'Note Content' : 'Quote';
+        contentTextarea.placeholder = type === 'note' ? 'Enter your research notes...' : 'Enter the quote...';
+        contentHelp.textContent = type === 'note' ? 'Write your thoughts and research' : 'Include the source in the description';
+    }
+}
+
+function selectStance(stance) {
+    // Update UI
+    document.querySelectorAll('.stance-option').forEach(opt => opt.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    
+    // Update hidden input
+    document.getElementById('stance').value = stance;
+}
+</script>
+{% endblock %}
