@@ -1,20 +1,19 @@
 # Core Django
 Django==5.2.8
-django-allauth==0.57.0
+django-allauth==65.13.1
 
-# Database
-psycopg2-binary==2.9.9
+# Static files
+whitenoise==6.7.0
 
-# Image Processing
-Pillow==10.1.0
+# Image Processing (Python 3.12 compatible)
+Pillow==10.3.0
 
 # YouTube Features
-youtube-transcript-api==0.6.1
+youtube-transcript-api==0.6.2
 
 # Web Scraping
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 requests==2.31.0
 
 # Utilities
 python-decouple==3.8
-whitenoise==6.6.0
