@@ -12,6 +12,7 @@ class Card(models.Model):
     
     TOPIC_CHOICES = [
         # Federal Topics
+                ('general', 'General Research'),
         ('immigration_policy', 'Immigration Policy'),
         ('healthcare_reform', 'Healthcare Reform'),
         ('gun_control', 'Gun Control'),
@@ -187,6 +188,18 @@ class SavedCard(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_cards')
     card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='saves')
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
+    
+    # Source tracking for Commons cards
+    SOURCE_TYPE_CHOICES = [
+        ('user', 'User Created'),
+        ('commons', 'Debrief Commons'),
+        ('public_figure', 'Public Figure (Unverified)'),
+        ('verified', 'Verified Public Figure'),
+    ]
+    source_type = models.CharField(max_length=20, choices=SOURCE_TYPE_CHOICES, default='user')
+    original_source = models.CharField(max_length=200, blank=True, null=True, help_text='Name of public figure or source')
+    source_url = models.URLField(blank=True, null=True, help_text='Link to original content')
+    synthesized_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='synthesized_cards', help_text='User who created this synthesis')
     saved_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -200,14 +213,72 @@ class SavedCard(models.Model):
 class UserSettings(models.Model):
     """User privacy and settings"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+    
+    # Privacy settings
     allow_messages = models.BooleanField(default=True)
+    
+    # Notification preferences
     email_notifications = models.BooleanField(default=True)
     email_on_friend_request = models.BooleanField(default=True)
     email_on_friend_card = models.BooleanField(default=True)
     email_on_message = models.BooleanField(default=True)
+    sms_notifications = models.BooleanField(default=False)
+    
+    # Profile information
+    mobile_number = models.CharField(max_length=20, blank=True, null=True)
+    STATE_CHOICES = [
+        ('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'),
+        ('CA', 'California'), ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'),
+        ('FL', 'Florida'), ('GA', 'Georgia'), ('HI', 'Hawaii'), ('ID', 'Idaho'),
+        ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'), ('KS', 'Kansas'),
+        ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'), ('MD', 'Maryland'),
+        ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'), ('MS', 'Mississippi'),
+        ('MO', 'Missouri'), ('MT', 'Montana'), ('NE', 'Nebraska'), ('NV', 'Nevada'),
+        ('NH', 'New Hampshire'), ('NJ', 'New Jersey'), ('NM', 'New Mexico'), ('NY', 'New York'),
+        ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'), ('OK', 'Oklahoma'),
+        ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'), ('SC', 'South Carolina'),
+        ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'), ('UT', 'Utah'),
+        ('VT', 'Vermont'), ('VA', 'Virginia'), ('WA', 'Washington'), ('WV', 'West Virginia'),
+        ('WI', 'Wisconsin'), ('WY', 'Wyoming'), ('DC', 'District of Columbia'),
+    ]
+    
+    home_state = models.CharField(max_length=2, blank=True, null=True, choices=STATE_CHOICES)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    birthdate = models.DateField(blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.username}'s settings"
+    
+    def profile_completion_percentage(self):
+        """Calculate profile completion percentage"""
+        fields = [
+            self.user.email,
+            self.mobile_number,
+            self.home_state,
+            self.profile_picture,
+            self.bio,
+            self.birthdate,
+        ]
+        completed = sum(1 for field in fields if field)
+        return int((completed / len(fields)) * 100)
+    
+    def incomplete_fields(self):
+        """Return list of incomplete profile fields"""
+        incomplete = []
+        if not self.user.email:
+            incomplete.append('Email')
+        if not self.mobile_number:
+            incomplete.append('Mobile Number')
+        if not self.home_state:
+            incomplete.append('Home State')
+        if not self.profile_picture:
+            incomplete.append('Profile Picture')
+        if not self.bio:
+            incomplete.append('Bio')
+        if not self.birthdate:
+            incomplete.append('Birthdate')
+        return incomplete
 
 
 
@@ -262,3 +333,147 @@ class DirectMessage(models.Model):
         if self.is_read and self.read_at:
             return 'seen'
         return 'delivered' 
+
+class CardVersion(models.Model):
+    """Track changes to argument cards"""
+    card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='versions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    hypothesis = models.TextField(max_length=500)
+    conclusion = models.TextField(max_length=500)
+    stance = models.CharField(max_length=20)
+    version_number = models.IntegerField(default=1)
+    change_summary = models.TextField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.card.title} - v{self.version_number}"
+
+
+class NotebookEntry(models.Model):
+    """User's personal research notes and saved links"""
+    ENTRY_TYPES = [
+        ('youtube', 'YouTube Video'),
+        ('article', 'Article/Link'),
+        ('note', 'Text Note'),
+        ('quote', 'Quote'),
+    ]
+    
+    STANCE_TYPES = [
+        ('supporting', 'Supporting'),
+        ('opposing', 'Opposing'),
+        ('neutral', 'Neutral'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notebook_entries')
+    entry_type = models.CharField(max_length=20, choices=ENTRY_TYPES)
+    title = models.CharField(max_length=200)
+    content = models.TextField()  # URL for links/videos, text for notes
+    description = models.TextField(max_length=500, blank=True)
+    NOTEBOOK_TOPICS = [
+        ('general', 'General Research'),
+        ('politics', 'Politics & Government'),
+        ('healthcare', 'Healthcare & Medicine'),
+        ('economy', 'Economy & Business'),
+        ('education', 'Education'),
+        ('environment', 'Environment & Climate'),
+        ('technology', 'Technology & Science'),
+        ('social', 'Social Issues'),
+        ('international', 'International Affairs'),
+        ('legal', 'Legal & Justice'),
+        ('culture', 'Culture & Society'),
+        ('other', 'Other'),
+    ]
+    
+    topic = models.CharField(max_length=100, choices=NOTEBOOK_TOPICS)
+    stance = models.CharField(max_length=20, choices=STANCE_TYPES, default='neutral')
+    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Notebook entries'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
+    
+    def get_youtube_id(self):
+        """Extract YouTube video ID from URL"""
+        if self.entry_type == 'youtube' and 'youtube.com' in self.content or 'youtu.be' in self.content:
+            import re
+            pattern = r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)'
+            match = re.search(pattern, self.content)
+            if match:
+                return match.group(1)
+        return None
+
+
+class NotebookNote(models.Model):
+    """Individual notes/points for a notebook entry"""
+    entry = models.ForeignKey(NotebookEntry, on_delete=models.CASCADE, related_name='notes')
+    text = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Note for {self.entry.title}: {self.text[:50]}"
+
+
+class TopicSurvey(models.Model):
+    """Survey questions for each policy topic"""
+    topic = models.CharField(max_length=100, choices=Card.TOPIC_CHOICES, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(help_text='Context or stats about this topic')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"Survey: {self.get_topic_display()}"
+
+
+class SurveyQuestion(models.Model):
+    """Individual questions for a topic survey"""
+    survey = models.ForeignKey(TopicSurvey, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.CharField(max_length=500)
+    order = models.IntegerField(default=0)
+    
+    # Map question to card field
+    MAPS_TO_CHOICES = [
+        ('stance', 'Stance (For/Against)'),
+        ('hypothesis', 'Hypothesis'),
+        ('supporting', 'Supporting Argument'),
+        ('opposing', 'Opposing Argument'),
+        ('conclusion', 'Conclusion'),
+        ('scope', 'Scope (Federal/State)'),
+    ]
+    maps_to = models.CharField(max_length=20, choices=MAPS_TO_CHOICES)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return f"{self.survey.topic}: {self.question_text[:50]}"
+
+
+class QuestionOption(models.Model):
+    """Multiple choice options for each question"""
+    question = models.ForeignKey(SurveyQuestion, on_delete=models.CASCADE, related_name='options')
+    option_text = models.CharField(max_length=300)
+    order = models.IntegerField(default=0)
+    
+    # What this option translates to in the card
+    card_value = models.TextField(help_text='Text that will be used in the argument card')
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return self.option_text

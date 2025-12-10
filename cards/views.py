@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from cards.youtube_utils import extract_video_id, get_youtube_transcript, summarize_transcript
+from cards.article_utils import fetch_article_text, summarize_article, is_valid_url
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Conversation, Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest
+from .models import Conversation, Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest, NotebookEntry, NotebookNote, TopicSurvey, SurveyQuestion, QuestionOption
 from .forms import CardForm, ArgumentForm, SourceForm, ArgumentFormSet
 from datetime import timedelta
 from django.utils import timezone
@@ -336,6 +338,9 @@ def user_dashboard(request):
     federal_count = Card.objects.filter(user=request.user, scope='federal').count()
     state_count = Card.objects.filter(user=request.user, scope='state').count()
     
+    # Get or create user settings
+    user_settings, _ = UserSettings.objects.get_or_create(user=request.user)
+    
     context = {
         'cards': user_cards,
         'total_cards': total_cards,
@@ -345,6 +350,7 @@ def user_dashboard(request):
         'federal_count': federal_count,
         'state_count': state_count,
         'scope_filter': scope_filter,
+        'user_settings': user_settings,
     }
     
     return render(request, 'cards/user_dashboard.html', context)
@@ -476,14 +482,30 @@ def user_profile(request, username):
         settings, created = UserSettings.objects.get_or_create(user=profile_user)
         allows_messages = settings.allow_messages
     
+    # Get follower/following counts
+    followers_count = Follow.objects.filter(following=profile_user).count()
+    following_count = Follow.objects.filter(follower=profile_user).count()
+    
+    # Check if friends
+    is_friends = False
+    if request.user.is_authenticated:
+        is_friends = (
+            Follow.objects.filter(follower=request.user, following=profile_user).exists() and
+            Follow.objects.filter(follower=profile_user, following=request.user).exists()
+        )
+    
     context = {
         'profile_user': profile_user,
+        'user_cards': user_cards,
         'cards': user_cards,
-        'public_saved_cards': [save.card for save in public_saves],
+        'public_saved_cards': public_saves,
         'private_saved_cards': [save.card for save in private_saves],
         'public_saves': public_saves,
         'private_saves': private_saves,
         'is_following': is_following,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'is_friends': is_friends,
         'friend_request_pending': friend_request_pending,
         'followers_count': followers_count,
         'following_count': following_count,
@@ -731,25 +753,6 @@ def saved_cards(request):
 
 
 @login_required
-def user_settings(request):
-    """User privacy and settings"""
-    settings, created = UserSettings.objects.get_or_create(user=request.user)
-    
-    if request.method == 'POST':
-        settings.allow_messages = request.POST.get('allow_messages') == 'on'
-        settings.email_notifications = request.POST.get('email_notifications') == 'on'
-        settings.save()
-        
-        messages.success(request, "Settings updated!")
-        return redirect('user_settings')
-    
-    context = {
-        'settings': settings,
-    }
-    
-    return render(request, 'cards/user_settings.html', context)
-
-
 @login_required
 def get_unread_message_count(request):
     """API endpoint to get unread message count"""
@@ -1099,28 +1102,870 @@ def redirect_compose_to_conversations(request, recipient_username=None):
 
 @login_required
 def user_settings(request):
-    """User settings page"""
+    """User settings page with auto-save toggles"""
+    from django.http import JsonResponse
+    
     user_settings_obj, created = UserSettings.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        # Update privacy settings
-        if 'allow_messages' in request.POST:
-            user_settings_obj.allow_messages = True
-        else:
-            user_settings_obj.allow_messages = False
+        print(f"DEBUG - Full POST data: {request.POST}")
+        form_type = request.POST.get('form_type')
+        print(f"DEBUG - form_type: '{form_type}'")
         
-        # Update email notification settings
-        user_settings_obj.email_on_friend_request = 'email_on_friend_request' in request.POST
-        user_settings_obj.email_on_friend_card = 'email_on_friend_card' in request.POST
-        user_settings_obj.email_on_message = 'email_on_message' in request.POST
-        user_settings_obj.email_notifications = 'email_notifications' in request.POST
+        # Handle toggle auto-save via AJAX
+        if form_type == 'toggle':
+            field = request.POST.get('field')
+            value = request.POST.get('value') == 'true'
+            
+            if hasattr(user_settings_obj, field):
+                setattr(user_settings_obj, field, value)
+                user_settings_obj.save()
+                return JsonResponse({'success': True})
+            
+            return JsonResponse({'success': False}, status=400)
         
-        user_settings_obj.save()
-        messages.success(request, "Settings updated successfully!")
-        return redirect('user_settings')
+        # Handle profile form submission
+        elif form_type == 'profile':
+            # Debug: Print what we're receiving
+            print(f"DEBUG - POST data: {request.POST}")
+            print(f"DEBUG - Bio: '{request.POST.get('bio')}'")
+            print(f"DEBUG - Mobile: '{request.POST.get('mobile_number')}'")
+            print(f"DEBUG - State: '{request.POST.get('home_state')}'")
+            
+            if request.FILES.get('profile_picture'):
+                user_settings_obj.profile_picture = request.FILES['profile_picture']
+            
+            # Update fields - save empty strings as None for optional fields
+            bio = request.POST.get('bio', '').strip()
+            user_settings_obj.bio = bio if bio else None
+            
+            mobile = request.POST.get('mobile_number', '').strip()
+            user_settings_obj.mobile_number = mobile if mobile else None
+            
+            home_state = request.POST.get('home_state', '').strip()
+            user_settings_obj.home_state = home_state if home_state else None
+            
+            birthdate = request.POST.get('birthdate', '').strip()
+            if birthdate:
+                user_settings_obj.birthdate = birthdate
+            else:
+                user_settings_obj.birthdate = None
+            
+            user_settings_obj.save()
+            
+            # Debug: Verify it saved
+            user_settings_obj.refresh_from_db()
+            print(f"DEBUG - After save - Bio: '{user_settings_obj.bio}'")
+            print(f"DEBUG - After save - Mobile: '{user_settings_obj.mobile_number}'")
+            print(f"DEBUG - After save - State: '{user_settings_obj.home_state}'")
+            
+            messages.success(request, "✅ Profile updated successfully!")
+            return redirect('user_settings')
+    
+    # Get state choices
+    state_choices = [
+        ('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'),
+        ('CA', 'California'), ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'),
+        ('FL', 'Florida'), ('GA', 'Georgia'), ('HI', 'Hawaii'), ('ID', 'Idaho'),
+        ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'), ('KS', 'Kansas'),
+        ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'), ('MD', 'Maryland'),
+        ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'), ('MS', 'Mississippi'),
+        ('MO', 'Missouri'), ('MT', 'Montana'), ('NE', 'Nebraska'), ('NV', 'Nevada'),
+        ('NH', 'New Hampshire'), ('NJ', 'New Jersey'), ('NM', 'New Mexico'), ('NY', 'New York'),
+        ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'), ('OK', 'Oklahoma'),
+        ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'), ('SC', 'South Carolina'),
+        ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'), ('UT', 'Utah'),
+        ('VT', 'Vermont'), ('VA', 'Virginia'), ('WA', 'Washington'), ('WV', 'West Virginia'),
+        ('WI', 'Wisconsin'), ('WY', 'Wyoming'), ('DC', 'District of Columbia'),
+    ]
     
     context = {
         'user_settings': user_settings_obj,
+        'state_choices': state_choices,
     }
     
     return render(request, 'cards/settings.html', context)
+
+
+@login_required
+def card_history(request, card_id):
+    """View version history of a card"""
+    card = get_object_or_404(Card, id=card_id)
+    
+    # Only card owner can see history
+    if card.user != request.user:
+        messages.error(request, "You can only view history of your own cards.")
+        return redirect('card_detail', card_id=card.id)
+    
+    versions = card.versions.all()
+    
+    context = {
+        'card': card,
+        'versions': versions,
+    }
+    
+    return render(request, 'cards/card_history.html', context)
+
+
+def commons_cards(request):
+    """View all cards from Debrief Commons"""
+    try:
+        commons_user = User.objects.get(username='DebriefCommons')
+        cards = Card.objects.filter(user=commons_user, visibility='public').order_by('-created_at')
+        
+        context = {
+            'cards': cards,
+            'commons_user': commons_user,
+        }
+        
+        return render(request, 'cards/commons.html', context)
+    except User.DoesNotExist:
+        messages.error(request, "Debrief Commons not set up yet.")
+        return redirect('index')
+
+
+@login_required
+def notebook(request):
+    """User's personal research notebook"""
+    topic_filter = request.GET.get('topic', '')
+    stance_filter = request.GET.get('stance', '')
+    type_filter = request.GET.get('type', '')
+    search_query = request.GET.get('search', '')
+    
+    entries = NotebookEntry.objects.filter(user=request.user)
+    
+    if topic_filter:
+        entries = entries.filter(topic=topic_filter)
+    if stance_filter:
+        entries = entries.filter(stance=stance_filter)
+    if type_filter:
+        entries = entries.filter(entry_type=type_filter)
+    if search_query:
+        from django.db.models import Q
+        entries = entries.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query) |
+            Q(tags__icontains=search_query)
+        )
+    
+    # Get counts by topic for sidebar
+    topic_counts = {}
+    for topic_code, topic_name in NotebookEntry.NOTEBOOK_TOPICS:
+        count = NotebookEntry.objects.filter(user=request.user, topic=topic_code).count()
+        if count > 0:
+            topic_counts[topic_code] = {'name': topic_name, 'count': count}
+    
+    context = {
+        'entries': entries,
+        'topic_filter': topic_filter,
+        'stance_filter': stance_filter,
+        'type_filter': type_filter,
+        'search_query': search_query,
+        'topic_counts': topic_counts,
+        'topics': NotebookEntry.NOTEBOOK_TOPICS,
+    }
+    
+    return render(request, 'cards/notebook.html', context)
+
+
+@login_required
+def add_notebook_entry(request):
+    """Add a new notebook entry"""
+    # Get pre-filled data from bookmarklet
+    prefill_url = request.GET.get('url', '')
+    prefill_title = request.GET.get('title', '')
+    prefill_selection = request.GET.get('selection', '')
+    from_popup = request.GET.get('popup', '')
+    
+    # Determine entry type from URL
+    entry_type = 'article'
+    if 'youtube.com' in prefill_url or 'youtu.be' in prefill_url:
+        entry_type = 'youtube'
+    
+    # Auto-save if coming from bookmarklet with URL and title
+    if from_popup and prefill_url and prefill_title and request.method == 'GET':
+        # Auto-create the entry
+        # Try to get content summary based on type
+        description = prefill_selection if prefill_selection else ''
+        
+        if entry_type == 'youtube':
+            video_id = extract_video_id(prefill_url)
+            if video_id:
+                transcript = get_youtube_transcript(video_id)
+                if transcript:
+                    summary = summarize_transcript(transcript, max_length=500)
+                    description = f"📝 Auto-summary: {summary}\n\n{description}" if description else f"📝 Auto-summary: {summary}"
+                    print(f"✅ Successfully extracted transcript for {video_id}")
+                else:
+                    no_transcript_msg = "⏳ No transcript available yet. This could be because:\n• Video was recently uploaded (captions take time to generate)\n• Creator disabled captions\n• Live stream hasn't ended yet\n\nTry using the 'Regenerate Summary' button later!"
+                    description = f"{no_transcript_msg}\n\n{description}" if description else no_transcript_msg
+        
+        elif entry_type == 'article' and is_valid_url(prefill_url):
+            # Try to fetch and summarize article
+            article_text = fetch_article_text(prefill_url)
+            if article_text:
+                summary = summarize_article(article_text, max_sentences=5)
+                if summary:
+                    description = f"📝 Auto-summary: {summary}\n\n{description}" if description else f"📝 Auto-summary: {summary}"
+                    print(f"✅ Successfully summarized article from {prefill_url}")
+                else:
+                    description = f"⚠️ Could not generate summary for this article.\n\n{description}" if description else "⚠️ Could not generate summary for this article."
+            else:
+                description = f"⚠️ Could not extract article content. Site may be protected or require login.\n\n{description}" if description else "⚠️ Could not extract article content."
+        
+        if not description:
+            description = 'Quick saved from browser'
+        
+        entry = NotebookEntry.objects.create(
+            user=request.user,
+            entry_type=entry_type,
+            title=prefill_title,
+            content=prefill_url,
+            description=description,
+            topic='general',  # General Research - user can change later
+            stance='neutral',
+            tags='quick-save',
+        )
+        messages.success(request, "📝 Saved to notebook!")
+        return render(request, 'cards/close_popup.html', {'entry': entry})
+    
+    if request.method == 'POST':
+        entry = NotebookEntry.objects.create(
+            user=request.user,
+            entry_type=request.POST.get('entry_type'),
+            title=request.POST.get('title'),
+            content=request.POST.get('content'),
+            description=request.POST.get('description', ''),
+            topic=request.POST.get('topic'),
+            stance=request.POST.get('stance', 'neutral'),
+            tags=request.POST.get('tags', ''),
+        )
+        messages.success(request, "📝 Entry added to your notebook!")
+        
+        # If opened in popup, close it
+        if request.GET.get('popup'):
+            return render(request, 'cards/close_popup.html', {'entry': entry})
+        
+        return redirect('notebook')
+    
+    context = {
+        'topics': NotebookEntry.NOTEBOOK_TOPICS,
+        'prefill_url': prefill_url,
+        'prefill_title': prefill_title,
+        'prefill_selection': prefill_selection,
+        'prefill_type': entry_type,
+    }
+    return render(request, 'cards/add_notebook_entry.html', context)
+
+
+@login_required
+def delete_notebook_entry(request, entry_id):
+    """Delete a notebook entry"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    entry.delete()
+    messages.success(request, "Entry deleted from notebook.")
+    return redirect('notebook')
+
+
+def quick_save(request):
+    """Quick save bookmarklet instructions page"""
+    return render(request, 'cards/quick_save.html')
+
+
+@login_required
+def notebook_entry_detail(request, entry_id):
+    """View detailed notebook entry"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    
+    # Parse auto-summary from description
+    auto_summary = None
+    remaining_description = entry.description
+    
+    if entry.description and '📝 Auto-summary:' in entry.description:
+        parts = entry.description.split('📝 Auto-summary:', 1)
+        if len(parts) > 1:
+            # Extract the summary (everything after the marker until double newline or end)
+            summary_part = parts[1]
+            if '\n\n' in summary_part:
+                auto_summary = summary_part.split('\n\n', 1)[0].strip()
+                remaining_description = summary_part.split('\n\n', 1)[1].strip() if len(summary_part.split('\n\n', 1)) > 1 else ''
+            else:
+                auto_summary = summary_part.strip()
+                remaining_description = ''
+    
+    # Remove transcript unavailable message from personal notes
+    if remaining_description and '⏳ No transcript available yet' in remaining_description:
+        # Remove the entire message
+        lines = remaining_description.split('\n')
+        filtered_lines = []
+        skip = False
+        for line in lines:
+            if '⏳ No transcript available yet' in line:
+                skip = True
+            elif skip and "Try using the 'Regenerate Summary' button later!" in line:
+                skip = False
+                continue
+            elif not skip:
+                filtered_lines.append(line)
+        remaining_description = '\n'.join(filtered_lines).strip()
+    
+    # Parse tags
+    tags = [tag.strip() for tag in entry.tags.split(',') if tag.strip()] if entry.tags else []
+    
+    # Get individual notes
+    notes = entry.notes.all()
+    
+    context = {
+        'entry': entry,
+        'auto_summary': auto_summary,
+        'remaining_description': remaining_description,
+        'tags': tags,
+        'topics': NotebookEntry.NOTEBOOK_TOPICS,
+        'notes': notes,
+    }
+    
+    return render(request, 'cards/notebook_entry_detail.html', context)
+
+
+@login_required
+def regenerate_summary(request, entry_id):
+    """Regenerate summary for YouTube video or article"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    
+    if entry.entry_type not in ['youtube', 'article']:
+        messages.error(request, "Can only regenerate summaries for YouTube videos and articles.")
+        return redirect('notebook_entry_detail', entry_id=entry.id)
+    
+    success = False
+    
+    if entry.entry_type == 'youtube':
+        video_id = extract_video_id(entry.content)
+        if not video_id:
+            messages.error(request, "Could not extract video ID from URL.")
+            return redirect('notebook_entry_detail', entry_id=entry.id)
+        
+        # Try to get transcript
+        transcript = get_youtube_transcript(video_id)
+        
+        if transcript:
+            summary = summarize_transcript(transcript, max_length=500)
+            success = True
+        else:
+            messages.error(request, "⏳ Transcript still not available. Try again later!")
+            return redirect('notebook_entry_detail', entry_id=entry.id)
+    
+    elif entry.entry_type == 'article':
+        # Try to fetch and summarize article
+        article_text = fetch_article_text(entry.content)
+        if article_text:
+            summary = summarize_article(article_text, max_sentences=5)
+            if summary:
+                success = True
+            else:
+                messages.error(request, "Could not generate summary for this article.")
+                return redirect('notebook_entry_detail', entry_id=entry.id)
+        else:
+            messages.error(request, "⚠️ Could not extract article content. Site may be protected.")
+            return redirect('notebook_entry_detail', entry_id=entry.id)
+    
+    if success:
+        # Update description - replace old summary or error messages
+        description = entry.description or ''
+        
+        # Remove old auto-summary if exists
+        if '📝 Auto-summary:' in description:
+            parts = description.split('📝 Auto-summary:', 1)
+            if len(parts) > 1 and '\n\n' in parts[1]:
+                description = parts[1].split('\n\n', 1)[1] if len(parts[1].split('\n\n', 1)) > 1 else ''
+            else:
+                description = parts[0]
+        
+        # Remove error messages
+        if '⏳ No transcript available yet' in description or '⚠️ Could not' in description:
+            parts = description.split('\n\n', 1)
+            description = parts[1] if len(parts) > 1 else ''
+        
+        # Add new summary
+        entry.description = f"📝 Auto-summary: {summary}\n\n{description}".strip()
+        entry.save()
+        
+        messages.success(request, "✅ Summary generated successfully!")
+    
+    return redirect('notebook_entry_detail', entry_id=entry.id)
+
+
+@login_required
+def update_entry_topic(request, entry_id):
+    """Update the topic of a notebook entry"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    
+    if request.method == 'POST':
+        new_topic = request.POST.get('topic')
+        if new_topic:
+            entry.topic = new_topic
+            entry.save()
+            messages.success(request, f"✅ Topic updated to {dict(NotebookEntry.NOTEBOOK_TOPICS).get(new_topic, new_topic)}!")
+    
+    return redirect('notebook_entry_detail', entry_id=entry.id)
+
+
+@login_required
+def update_entry_notes(request, entry_id):
+    """Update personal notes for a notebook entry"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    
+    if request.method == 'POST':
+        new_notes = request.POST.get('notes', '').strip()
+        
+        # Preserve auto-summary if it exists
+        if entry.description and '📝 Auto-summary:' in entry.description:
+            # Extract the summary
+            parts = entry.description.split('📝 Auto-summary:', 1)
+            if len(parts) > 1:
+                summary_part = parts[1]
+                if '\n\n' in summary_part:
+                    auto_summary = summary_part.split('\n\n', 1)[0].strip()
+                else:
+                    auto_summary = summary_part.strip()
+                
+                # Combine summary with new notes
+                if new_notes:
+                    entry.description = f"📝 Auto-summary: {auto_summary}\n\n{new_notes}"
+                else:
+                    entry.description = f"📝 Auto-summary: {auto_summary}"
+            else:
+                entry.description = new_notes
+        else:
+            # No auto-summary, just save the notes
+            entry.description = new_notes
+        
+        entry.save()
+        messages.success(request, "✅ Notes saved successfully!")
+    
+    return redirect('notebook_entry_detail', entry_id=entry.id)
+
+
+@login_required
+def add_notebook_note(request, entry_id):
+    """Add an individual note to a notebook entry"""
+    entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+    
+    if request.method == 'POST':
+        note_text = request.POST.get('note_text', '').strip()
+        if note_text:
+            NotebookNote.objects.create(
+                entry=entry,
+                text=note_text
+            )
+            messages.success(request, "✅ Note added!")
+        else:
+            messages.error(request, "Note cannot be empty.")
+    
+    return redirect('notebook_entry_detail', entry_id=entry.id)
+
+
+@login_required
+def delete_notebook_note(request, note_id):
+    """Delete an individual note"""
+    note = get_object_or_404(NotebookNote, id=note_id, entry__user=request.user)
+    entry_id = note.entry.id
+    note.delete()
+    messages.success(request, "🗑️ Note deleted!")
+    return redirect('notebook_entry_detail', entry_id=entry_id)
+
+
+@login_required
+def edit_notebook_note(request, note_id):
+    """Edit an individual note"""
+    note = get_object_or_404(NotebookNote, id=note_id, entry__user=request.user)
+    
+    if request.method == 'POST':
+        note_text = request.POST.get('note_text', '').strip()
+        if note_text:
+            note.text = note_text
+            note.save()
+            messages.success(request, "✅ Note updated!")
+        else:
+            messages.error(request, "Note cannot be empty.")
+    
+    return redirect('notebook_entry_detail', entry_id=note.entry.id)
+
+
+@login_required
+def card_wizard(request):
+    """Guided argument card creation wizard"""
+    if request.method == 'POST':
+        # Extract wizard data
+        title = request.POST.get('title')
+        topic = request.POST.get('topic')
+        scope = request.POST.get('scope')
+        stance = request.POST.get('stance')
+        hypothesis = request.POST.get('hypothesis')
+        conclusion = request.POST.get('conclusion')
+        alternative = request.POST.get('alternative', '')
+        
+        # Create the card
+        card = Card.objects.create(
+            user=request.user,
+            title=title,
+            topic=topic,
+            scope=scope,
+            hypothesis=hypothesis,
+            conclusion=conclusion,
+            stance=stance,
+            visibility='public'
+        )
+        
+        # Add supporting arguments
+        supporting_args = request.POST.getlist('supporting_args[]')
+        for i, arg_text in enumerate(supporting_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='pro',
+                    summary=arg_text.strip(),
+                    order=i
+                )
+        
+        # Add opposing arguments
+        opposing_args = request.POST.getlist('opposing_args[]')
+        for i, arg_text in enumerate(opposing_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='con',
+                    summary=arg_text.strip(),
+                    order=i
+                )
+        
+        # Add alternative as a note in conclusion if provided
+        if alternative.strip():
+            card.conclusion = f"{conclusion}\n\nAlternative Solution: {alternative}"
+            card.save()
+        
+        messages.success(request, "🎉 Argument card created successfully!")
+        return redirect('card_detail', card_id=card.id)
+    
+    context = {
+        'topics': Card.TOPIC_CHOICES,
+    }
+    return render(request, 'cards/card_wizard.html', context)
+
+
+@login_required
+def synthesize_public_figure_card(request):
+    """Create a card synthesizing a public figure's argument"""
+    # Only allow Commons user or admins to synthesize
+    if not (request.user.username == 'DebriefCommons' or request.user.is_staff):
+        messages.error(request, "Only Debrief Commons can synthesize public figure arguments.")
+        return redirect('user_dashboard')
+    
+    if request.method == 'POST':
+        # Extract data
+        title = request.POST.get('title')
+        topic = request.POST.get('topic')
+        scope = request.POST.get('scope')
+        hypothesis = request.POST.get('hypothesis')
+        conclusion = request.POST.get('conclusion')
+        stance = request.POST.get('stance')
+        
+        # Public figure info
+        original_source = request.POST.get('original_source')  # e.g., "Joe Rogan"
+        source_url = request.POST.get('source_url')  # e.g., link to podcast
+        
+        # Create card as DebriefCommons user
+        commons_user = User.objects.get(username='DebriefCommons')
+        
+        card = Card.objects.create(
+            user=commons_user,
+            title=title,
+            topic=topic,
+            scope=scope,
+            hypothesis=hypothesis,
+            conclusion=conclusion,
+            stance=stance,
+            visibility='public',
+            source_type='public_figure',
+            original_source=original_source,
+            source_url=source_url,
+            synthesized_by=request.user
+        )
+        
+        # Add arguments
+        supporting_args = request.POST.getlist('supporting_args[]')
+        for i, arg_text in enumerate(supporting_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    argument_type='supporting',
+                    text=arg_text.strip(),
+                    order=i
+                )
+        
+        opposing_args = request.POST.getlist('opposing_args[]')
+        for i, arg_text in enumerate(opposing_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    argument_type='opposing',
+                    text=arg_text.strip(),
+                    order=i
+                )
+        
+        messages.success(request, f"✅ Synthesized argument card for {original_source}!")
+        return redirect('commons_cards')
+    
+    context = {
+        'topics': Card.TOPIC_CHOICES,
+    }
+    return render(request, 'cards/synthesize_figure_card.html', context)
+
+
+@login_required
+def topic_survey(request, topic):
+    """Interactive survey for a specific topic"""
+    try:
+        survey = TopicSurvey.objects.get(topic=topic, is_active=True)
+    except TopicSurvey.DoesNotExist:
+        messages.error(request, "Survey not available for this topic yet.")
+        return redirect('create_card_wizard')
+    
+    questions = survey.questions.prefetch_related('options').all()
+    
+    context = {
+        'survey': survey,
+        'questions': questions,
+        'topic_display': dict(Card.TOPIC_CHOICES).get(topic, topic),
+    }
+    
+    return render(request, 'cards/topic_survey.html', context)
+
+
+@login_required
+def survey_list(request):
+    """List all available topic surveys grouped by scope"""
+    # Get scope filter from query params
+    scope_filter = request.GET.get('scope', '')
+    
+    surveys = TopicSurvey.objects.filter(is_active=True).prefetch_related('questions')
+    
+    # Group by whether topics are typically federal or state
+    federal_topics = ['immigration', 'foreign_policy', 'defense', 'healthcare', 'tax_policy', 
+                      'social_security', 'gun_control', 'trade', 'climate_change']
+    state_topics = ['education', 'criminal_justice', 'drug_policy', 'voting_rights', 
+                    'housing', 'transportation', 'abortion']
+    
+    if scope_filter == 'federal':
+        surveys = surveys.filter(topic__in=federal_topics)
+    elif scope_filter == 'state':
+        surveys = surveys.filter(topic__in=state_topics)
+    
+    # Separate surveys by typical scope
+    federal_surveys = surveys.filter(topic__in=federal_topics)
+    state_surveys = surveys.filter(topic__in=state_topics)
+    
+    context = {
+        'surveys': surveys,
+        'federal_surveys': federal_surveys,
+        'state_surveys': state_surveys,
+        'scope_filter': scope_filter,
+    }
+    
+    return render(request, 'cards/survey_list.html', context)
+
+
+def process_survey(request, topic):
+    """Process survey responses and generate card preview"""
+    if request.method != 'POST':
+        return redirect('topic_survey', topic=topic)
+    
+    try:
+        survey = TopicSurvey.objects.get(topic=topic)
+    except TopicSurvey.DoesNotExist:
+        messages.error(request, "Survey not found.")
+        return redirect('survey_list')
+    
+    # Collect responses by type
+    collected = {
+        'stance': None,
+        'scope': 'federal',
+        'hypothesis': [],
+        'supporting': [],
+        'opposing': [],
+        'conclusion': [],
+    }
+    
+    for question in survey.questions.all():
+        option_ids = request.POST.getlist(f'question_{question.id}')
+        
+        for option_id in option_ids:
+            if option_id:
+                option = QuestionOption.objects.get(id=option_id)
+                maps_to = question.maps_to
+                
+                if maps_to in ['stance', 'scope']:
+                    collected[maps_to] = option.card_value
+                else:
+                    collected[maps_to].append(option.card_value)
+    
+    # Combine hypothesis statements
+    hypothesis_text = ' '.join(collected['hypothesis']) if collected['hypothesis'] else 'Immigration policy reform is needed.'
+    
+    # Combine conclusion statements
+    conclusion_text = ' '.join(collected['conclusion']) if collected['conclusion'] else 'We need comprehensive immigration reform.'
+    
+    # Generate title based on topic and stance
+    topic_name = dict(Card.TOPIC_CHOICES).get(topic, topic)
+    
+    # Store in session for preview
+    request.session['draft_card'] = {
+        'title': f"My Position on {topic_name} Reform",
+        'topic': topic,
+        'scope': collected['scope'],
+        'stance': collected['stance'] or 'for',
+        'hypothesis': hypothesis_text,
+        'conclusion': conclusion_text,
+        'supporting_args': collected['supporting'] if collected['supporting'] else [],
+        'opposing_args': collected['opposing'] if collected['opposing'] else [],
+    }
+    
+    return redirect('survey_card_preview')
+
+
+@login_required
+def edit_survey_card(request):
+    """Edit the AI-generated card before publishing"""
+    draft = request.session.get('draft_card')
+    
+    if not draft:
+        messages.error(request, "No draft card found. Please take the survey first.")
+        return redirect('create_card_wizard')
+    
+    if request.method == 'POST':
+        # Create the card
+        card = Card.objects.create(
+            user=request.user,
+            title=request.POST.get('title'),
+            topic=draft['topic'],
+            scope=request.POST.get('scope'),
+            hypothesis=request.POST.get('hypothesis'),
+            conclusion=request.POST.get('conclusion'),
+            stance=request.POST.get('stance'),
+            visibility='public'
+        )
+        
+        # Add supporting arguments
+        supporting_args = request.POST.getlist('supporting_args[]')
+        for i, arg_text in enumerate(supporting_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='pro',
+                    summary=arg_text.strip(),
+                    order=i
+                )
+        
+        # Add opposing arguments
+        opposing_args = request.POST.getlist('opposing_args[]')
+        for i, arg_text in enumerate(opposing_args, 1):
+            if arg_text.strip():
+                Argument.objects.create(
+                    card=card,
+                    type='con',
+                    summary=arg_text.strip(),
+                    order=i
+                )
+        
+        # Clear session
+        del request.session['draft_card']
+        
+        messages.success(request, "🎉 Argument card published!")
+        return redirect('card_detail', card_id=card.id)
+    
+    context = {
+        'draft': draft,
+        'topics': Card.TOPIC_CHOICES,
+    }
+    
+    return render(request, 'cards/edit_survey_card.html', context)
+
+
+@login_required
+def survey_card_preview(request):
+    """Show preview of survey-generated card"""
+    draft = request.session.get('draft_card')
+    
+    if not draft:
+        messages.error(request, "No draft card found. Please take a survey first.")
+        return redirect('survey_list')
+    
+    topic_name = dict(Card.TOPIC_CHOICES).get(draft['topic'], draft['topic'])
+    
+    context = {
+        'draft': draft,
+        'topic_display': topic_name,
+    }
+    
+    return render(request, 'cards/survey_card_preview.html', context)
+
+
+@login_required
+def publish_survey_card(request):
+    """Publish the survey-generated card without editing"""
+    if request.method != 'POST':
+        return redirect('survey_list')
+    
+    draft = request.session.get('draft_card')
+    
+    if not draft:
+        messages.error(request, "No draft card found.")
+        return redirect('survey_list')
+    
+    # Create the card
+    card = Card.objects.create(
+        user=request.user,
+        title=draft['title'],
+        topic=draft['topic'],
+        scope=draft['scope'],
+        hypothesis=draft['hypothesis'],
+        conclusion=draft['conclusion'],
+        stance=draft['stance'],
+        visibility='public'
+    )
+    
+    # Add supporting arguments
+    for i, arg_text in enumerate(draft.get('supporting_args', []), 1):
+        if arg_text:
+            Argument.objects.create(
+                card=card,
+                type='pro',
+                summary=arg_text,
+                order=i
+            )
+    
+    # Add opposing arguments
+    for i, arg_text in enumerate(draft.get('opposing_args', []), 1):
+        if arg_text:
+            Argument.objects.create(
+                card=card,
+                type='con',
+                summary=arg_text,
+                order=i
+            )
+    
+    # Clear session
+    del request.session['draft_card']
+    
+    messages.success(request, "🎉 Your argument card has been published!")
+    return redirect('card_detail', card_id=card.id)
+
+
+@login_required
+def discard_survey_card(request):
+    """Discard the draft and start over"""
+    if request.method == 'POST':
+        if 'draft_card' in request.session:
+            del request.session['draft_card']
+        messages.info(request, "Draft discarded. Take another survey to create a new card!")
+    
+    return redirect('survey_list')
