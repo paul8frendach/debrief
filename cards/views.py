@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponseRedirect
 from cards.youtube_utils import extract_video_id, get_youtube_transcript, summarize_transcript
 from cards.article_utils import fetch_article_text, summarize_article, is_valid_url
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Conversation, Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest, NotebookEntry, NotebookNote, TopicSurvey, SurveyQuestion, QuestionOption
+from .models import Conversation, Card, Argument, Source, Follow, Notification, SavedCard, UserSettings, DirectMessage, FriendRequest, NotebookEntry, NotebookNote, TopicSurvey, SurveyQuestion, QuestionOption, PolicyFact, FactSource
 from .forms import CardForm, ArgumentForm, SourceForm, ArgumentFormSet
 from datetime import timedelta
 from django.utils import timezone
@@ -660,7 +661,6 @@ def mark_all_notifications_read(request):
 @login_required
 def get_notification_count(request):
     """API endpoint to get unread notification count"""
-    from django.http import JsonResponse
     count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     return JsonResponse({'count': count})
 
@@ -756,7 +756,6 @@ def saved_cards(request):
 @login_required
 def get_unread_message_count(request):
     """API endpoint to get unread message count"""
-    from django.http import JsonResponse
     from django.db.models import Q
     
     # Count unread messages in all conversations
@@ -830,7 +829,6 @@ def card_savers(request, card_id):
 @login_required
 def search_friends(request):
     """API endpoint to search friends for messaging"""
-    from django.http import JsonResponse
     from django.db.models import Q
     
     query = request.GET.get('q', '').strip()
@@ -861,7 +859,6 @@ def search_friends(request):
 @login_required
 def share_card_message(request, card_id):
     """Share a card via direct message - creates a new conversation"""
-    from django.http import HttpResponseRedirect
     from django.urls import reverse
     from django.db.models import Q
     
@@ -926,7 +923,6 @@ def share_card_message(request, card_id):
 @login_required
 def send_friend_request(request, user_id):
     """Send a friend request to another user"""
-    from django.http import HttpResponseRedirect
     from django.urls import reverse
     from .emails import send_friend_request_email
     
@@ -1041,7 +1037,6 @@ def pending_friend_requests(request):
 @login_required
 def get_friend_request_count(request):
     """API endpoint to get pending friend request count"""
-    from django.http import JsonResponse
     count = FriendRequest.objects.filter(to_user=request.user, status='pending').count()
     return JsonResponse({'count': count})
 
@@ -1103,7 +1098,6 @@ def redirect_compose_to_conversations(request, recipient_username=None):
 @login_required
 def user_settings(request):
     """User settings page with auto-save toggles"""
-    from django.http import JsonResponse
     
     user_settings_obj, created = UserSettings.objects.get_or_create(user=request.user)
     
@@ -1969,3 +1963,141 @@ def discard_survey_card(request):
         messages.info(request, "Draft discarded. Take another survey to create a new card!")
     
     return redirect('survey_list')
+
+
+@login_required
+def search_facts(request):
+    """Search for facts related to a query"""
+    query = request.GET.get('q', '')
+    topic = request.GET.get('topic', '')
+    
+    if not query:
+        return JsonResponse({'results': []})
+    
+    from .fact_apis import FactFetcher
+    fetcher = FactFetcher()
+    
+    results = []
+    
+    # Search FactCheck.org
+    factcheck_results = fetcher.search_fact_check_org(query)
+    results.extend(factcheck_results)
+    
+    # Search Pew Research
+    pew_results = fetcher.search_pew_research(query)
+    for item in pew_results:
+        results.append({
+            'title': item['title'],
+            'url': item['url'],
+            'source': 'Pew Research Center'
+        })
+    
+    # Get Wikipedia context
+    wiki_summary = fetcher.fetch_wikipedia_summary(query)
+    if wiki_summary:
+        results.insert(0, {
+            'title': f'Overview: {query}',
+            'excerpt': wiki_summary,
+            'url': f'https://en.wikipedia.org/wiki/{query.replace(" ", "_")}',
+            'source': 'Wikipedia'
+        })
+    
+    # Search database facts
+    db_facts = PolicyFact.objects.filter(
+        fact_text__icontains=query
+    )
+    if topic:
+        db_facts = db_facts.filter(topic=topic)
+    
+    for fact in db_facts[:5]:
+        results.append({
+            'title': fact.fact_text[:100],
+            'url': fact.source_url,
+            'source': fact.source_name,
+            'date': fact.date_published.strftime('%Y-%m-%d') if fact.date_published else None
+        })
+    
+    return JsonResponse({'results': results[:10]})
+
+
+@login_required
+def enhanced_fact_search(request):
+    """AI-enhanced fact search with Ground News integration"""
+    query = request.GET.get('q', '')
+    topic = request.GET.get('topic', '')
+    
+    if not query:
+        return JsonResponse({'results': [], 'suggestions': []})
+    
+    from .fact_apis import FactFetcher
+    from .ground_news_api import GroundNewsAPI
+    from .ai_search_helper import AISearchHelper
+    
+    results = []
+    suggestions = {}
+    
+    # Get AI enhancements
+    ai_helper = AISearchHelper()
+    enhanced = ai_helper.enhance_query(query, topic)
+    
+    if enhanced:
+        suggestions = {
+            'better_queries': enhanced.get('search_queries', []),
+            'research_tips': enhanced.get('research_suggestions', []),
+            'key_terms': enhanced.get('key_terms', [])
+        }
+    
+    # Search Ground News
+    ground_news = GroundNewsAPI()
+    news_results = ground_news.search_stories(query)
+    
+    if news_results:
+        for story in news_results:
+            results.append({
+                'title': story['title'],
+                'excerpt': story['excerpt'],
+                'url': story['url'],
+                'source': 'Ground News',
+                'date': story['date'],
+                'bias_distribution': f"{story['bias_info']['left_sources']}L / {story['bias_info']['center_sources']}C / {story['bias_info']['right_sources']}R",
+                'perspectives': story['perspectives'],
+                'type': 'news'
+            })
+    
+    # Search database facts
+    db_facts = PolicyFact.objects.filter(fact_text__icontains=query)
+    if topic:
+        db_facts = db_facts.filter(topic=topic)
+    
+    for fact in db_facts[:5]:
+        results.append({
+            'title': fact.fact_text[:100],
+            'url': fact.source_url,
+            'source': fact.source_name,
+            'date': fact.date_published.strftime('%Y-%m-%d') if fact.date_published else None,
+            'type': 'fact'
+        })
+    
+    # Original fact APIs
+    fetcher = FactFetcher()
+    
+    # Wikipedia overview
+    wiki_summary = fetcher.fetch_wikipedia_summary(query)
+    if wiki_summary:
+        results.append({
+            'title': f'Overview: {query}',
+            'excerpt': wiki_summary,
+            'url': f'https://en.wikipedia.org/wiki/{query.replace(" ", "_")}',
+            'source': 'Wikipedia',
+            'type': 'overview'
+        })
+    
+    # Use AI to curate and rank results
+    if results:
+        results = ai_helper.curate_results(query, results, topic)
+    
+    return JsonResponse({
+        'results': results[:15],
+        'suggestions': suggestions,
+        'query_enhanced': bool(enhanced)
+    })

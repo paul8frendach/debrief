@@ -456,6 +456,11 @@ class SurveyQuestion(models.Model):
     ]
     maps_to = models.CharField(max_length=20, choices=MAPS_TO_CHOICES)
     
+    # Context and educational content
+    context_stats = models.TextField(blank=True, help_text='Bullet points with key statistics')
+    learn_more = models.TextField(blank=True, help_text='Deeper explanation and background')
+    sources = models.TextField(blank=True, help_text='Comma-separated URLs to credible sources')
+    
     class Meta:
         ordering = ['order']
     
@@ -477,3 +482,57 @@ class QuestionOption(models.Model):
     
     def __str__(self):
         return self.option_text
+
+
+# Update SurveyQuestion model with context fields
+# (We'll use a migration to add these to existing model)
+
+
+class PolicyFact(models.Model):
+    """Store verifiable facts about policy topics"""
+    topic = models.CharField(max_length=50, choices=Card.TOPIC_CHOICES)
+    fact_text = models.TextField(help_text='The factual statement')
+    source_name = models.CharField(max_length=200, help_text='Source organization')
+    source_url = models.URLField()
+    date_published = models.DateField(null=True, blank=True)
+    last_verified = models.DateTimeField(auto_now=True)
+    fact_type = models.CharField(max_length=50, choices=[
+        ('statistic', 'Statistic'),
+        ('study', 'Academic Study'),
+        ('poll', 'Public Opinion Poll'),
+        ('law', 'Legal/Policy Info'),
+        ('comparison', 'International Comparison'),
+    ])
+    relevance_score = models.IntegerField(default=50, help_text='1-100, how relevant/important')
+    
+    class Meta:
+        ordering = ['-relevance_score', '-last_verified']
+        indexes = [
+            models.Index(fields=['topic', '-relevance_score']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_topic_display()}: {self.fact_text[:50]}..."
+
+
+class FactSource(models.Model):
+    """Trusted sources for fact-checking"""
+    name = models.CharField(max_length=200)
+    base_url = models.URLField()
+    api_endpoint = models.URLField(blank=True, help_text='API endpoint if available')
+    api_key_required = models.BooleanField(default=False)
+    credibility_rating = models.IntegerField(default=80, help_text='1-100')
+    source_type = models.CharField(max_length=50, choices=[
+        ('government', 'Government Agency'),
+        ('academic', 'Academic Institution'),
+        ('think_tank', 'Think Tank'),
+        ('news', 'News Organization'),
+        ('ngo', 'Non-Profit Organization'),
+    ])
+    topics = models.JSONField(default=list, help_text='List of topics this source covers')
+    
+    class Meta:
+        ordering = ['-credibility_rating']
+    
+    def __str__(self):
+        return self.name

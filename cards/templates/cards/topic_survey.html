@@ -3,6 +3,409 @@
 {% block title %}{{ topic_display }} Survey - Debrief{% endblock %}
 
 {% block extra_style %}
+.context-box {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-left: 4px solid #667eea;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.context-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.context-icon {
+    font-size: 20px;
+}
+
+.context-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.context-stats {
+    color: #d0d0e0;
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+}
+
+.context-stats p {
+    margin: 0;
+}
+
+.learn-more-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 0;
+    color: #a0b5ff;
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.learn-more-toggle:hover {
+    color: #667eea;
+}
+
+.toggle-icon {
+    font-size: 10px;
+    transition: transform 0.3s;
+}
+
+.toggle-icon.open {
+    transform: rotate(90deg);
+}
+
+.learn-more-content {
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-top: 8px;
+    color: #b0b0c0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.sources {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 12px;
+}
+
+.sources a {
+    color: #667eea;
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+.sources a:hover {
+    text-decoration: underline;
+}
+
+.fact-search-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.search-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-icon {
+    font-size: 20px;
+}
+
+.fact-search-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: white;
+    font-size: 14px;
+}
+
+.fact-search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.fact-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.fact-results {
+    margin-top: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.fact-result-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid #10b981;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fact-result-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
+
+.fact-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.fact-excerpt {
+    font-size: 12px;
+    color: #b0b0c0;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.fact-source {
+    font-size: 11px;
+    color: #808090;
+}
+
+.fact-source-link {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.fact-source-link:hover {
+    text-decoration: underline;
+}
+
+.search-loading {
+    text-align: center;
+    padding: 20px;
+    color: #808090;
+    font-size: 13px;
+}
+
+.ai-suggestions-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #10b981;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.ai-icon {
+    font-size: 18px;
+}
+
+.suggestion-section {
+    margin-bottom: 12px;
+}
+
+.suggestion-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #d0d0e0;
+    margin-bottom: 8px;
+}
+
+.suggestion-chip {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid #667eea;
+    color: #a0b5ff;
+    padding: 6px 12px;
+    border-radius: 16px;
+    margin: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.suggestion-chip:hover {
+    background: rgba(102, 126, 234, 0.3);
+    transform: translateY(-2px);
+}
+
+.key-terms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.key-term {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #6ee7b7;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.research-tip {
+    color: #b0b0c0;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 4px 0;
+}
+
+.fact-result-item.ai-recommended {
+    border-left: 4px solid #10b981;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.recommended-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.result-type-icon {
+    font-size: 16px;
+}
+
+.result-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #808090;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.ai-explanation {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 3px solid #10b981;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: #d0d0e0;
+    border-radius: 4px;
+}
+
+.ai-explanation strong {
+    color: #10b981;
+}
+
+.bias-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 11px;
+}
+
+.bias-label {
+    color: #808090;
+    font-weight: 600;
+}
+
+.bias-stats {
+    background: rgba(102, 126, 234, 0.2);
+    padding: 2px 8px;
+    border-radius: 8px;
+    color: #a0b5ff;
+    font-weight: 600;
+}
+
+.perspectives {
+    color: #808090;
+    font-style: italic;
+}
+
+.save-to-notebook-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.save-to-notebook-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.save-to-notebook-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading-spinner {
+    font-size: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #d0d0e0;
+    margin-bottom: 8px;
+}
+
+.empty-suggestion {
+    font-size: 13px;
+    color: #808090;
+    margin-bottom: 12px;
+}
+
+.suggestion-chip-empty {
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid #667eea;
+    color: #a0b5ff;
+    padding: 8px 16px;
+    border-radius: 12px;
+    margin: 8px;
+    display: inline-block;
+    font-size: 13px;
+}
+
+.search-empty {
+    text-align: center;
+    padding: 20px;
+    color: #808090;
+    font-size: 13px;
+}
+
 .survey-container {
     max-width: 900px;
     margin: 60px auto;
@@ -308,6 +711,49 @@
             <div class="question-number">Question {{ forloop.counter }} of {{ questions|length }}</div>
             <h2 class="question-text">{{ question.question_text }}</h2>
             
+            <!-- Context Stats -->
+            {% if question.context_stats %}
+            <div class="context-box">
+                <div class="context-header">
+                    <span class="context-icon">📊</span>
+                    <span class="context-title">Quick Context</span>
+                </div>
+                <div class="context-stats">
+                    {{ question.context_stats|linebreaks }}
+                </div>
+                
+                {% if question.learn_more %}
+                <div class="learn-more-toggle" onclick="toggleLearnMore({{ question.id }})">
+                    <span class="toggle-icon" id="toggleIcon{{ question.id }}">▶</span>
+                    <span class="toggle-text">Learn More</span>
+                </div>
+                <div class="learn-more-content" id="learnMore{{ question.id }}" style="display: none;">
+                    <p>{{ question.learn_more }}</p>
+                    {% if question.sources %}
+                    <div class="sources">
+                        <strong>Sources:</strong> <a href="{{ question.sources }}" target="_blank" rel="noopener">View Sources</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Fact Search Bar -->
+            <div class="fact-search-box">
+                <div class="search-header">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        class="fact-search-input" 
+                        placeholder="Search for facts about this topic..."
+                        id="factSearch{{ question.id }}"
+                        onkeyup="searchFacts(this.value, '{{ survey.topic }}', {{ question.id }})"
+                    >
+                </div>
+                <div class="fact-results" id="factResults{{ question.id }}" style="display: none;"></div>
+            </div>
+            
             <div class="options-grid">
                 {% for option in question.options.all %}
                 <label class="option-bubble" data-question-id="{{ question.id }}" data-option-id="{{ option.id }}">
@@ -511,5 +957,300 @@ function completeForm() {
 
 // Initialize progress
 updateProgress();
+
+
+// Toggle Learn More section
+function toggleLearnMore(questionId) {
+    const content = document.getElementById('learnMore' + questionId);
+    const icon = document.getElementById('toggleIcon' + questionId);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.classList.add('open');
+        icon.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('open');
+        icon.textContent = '▶';
+    }
+}
+
+// Search facts with debounce and AI enhancement
+let searchTimeout;
+function searchFacts(query, topic, questionId) {
+    clearTimeout(searchTimeout);
+    
+    const resultsDiv = document.getElementById('factResults' + questionId);
+    
+    if (query.length < 3) {
+        resultsDiv.style.display = 'none';
+        return;
+    }
+    
+    // Show loading with AI indicator
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+        <div class="search-loading">
+            <div class="loading-spinner">🔍</div>
+            <div>Searching with AI assistance...</div>
+        </div>
+    `;
+    
+    // Debounce search
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/enhanced-fact-search/?q=${encodeURIComponent(query)}&topic=${topic}`)
+            .then(response => response.json())
+            .then(data => {
+                displayEnhancedResults(data, questionId, topic);
+            })
+            .catch(error => {
+                console.error('Fact search error:', error);
+                // Fallback to basic search
+                fetch(`/api/search-facts/?q=${encodeURIComponent(query)}&topic=${topic}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displayFactResults(data.results, questionId);
+                    })
+                    .catch(() => {
+                        resultsDiv.innerHTML = '<div class="search-empty">Error loading results. Please try again.</div>';
+                    });
+            });
+    }, 800); // Longer delay for AI processing
+}
+
+function displayFactResults(results, questionId) {
+    const resultsDiv = document.getElementById('factResults' + questionId);
+    
+    if (!results || results.length === 0) {
+        resultsDiv.innerHTML = '<div class="search-empty">No results found. Try different keywords.</div>';
+        return;
+    }
+    
+    let html = '';
+    results.forEach(result => {
+        html += `
+            <div class="fact-result-item" onclick="window.open('${result.url}', '_blank')">
+                <div class="fact-title">${escapeHtml(result.title)}</div>
+                ${result.excerpt ? `<div class="fact-excerpt">${escapeHtml(result.excerpt.substring(0, 150))}...</div>` : ''}
+                <div class="fact-source">
+                    Source: <a href="${result.url}" target="_blank" class="fact-source-link" onclick="event.stopPropagation()">${escapeHtml(result.source)}</a>
+                    ${result.date ? ` • ${result.date}` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsDiv.innerHTML = html;
+}
+
+function displayEnhancedResults(data, questionId, topic) {
+    const resultsDiv = document.getElementById('factResults' + questionId);
+    
+    if (!data.results || data.results.length === 0) {
+        resultsDiv.innerHTML = generateNoResultsHTML(data.suggestions);
+        return;
+    }
+    
+    let html = '';
+    
+    // Show AI suggestions if available
+    if (data.suggestions && data.query_enhanced) {
+        html += generateSuggestionsHTML(data.suggestions, questionId, topic);
+    }
+    
+    // Show results with enhanced info
+    data.results.forEach((result, index) => {
+        html += generateResultCard(result, index, questionId, topic);
+    });
+    
+    resultsDiv.innerHTML = html;
+}
+
+function generateSuggestionsHTML(suggestions, questionId, topic) {
+    let html = '<div class="ai-suggestions-box">';
+    html += '<div class="ai-header"><span class="ai-icon">✨</span> AI Suggestions</div>';
+    
+    // Better search queries
+    if (suggestions.better_queries && suggestions.better_queries.length > 0) {
+        html += '<div class="suggestion-section">';
+        html += '<div class="suggestion-label">Try these searches:</div>';
+        suggestions.better_queries.forEach(query => {
+            html += `<button class="suggestion-chip" onclick="document.getElementById('factSearch${questionId}').value = '${escapeHtml(query)}'; searchFacts('${escapeHtml(query)}', '${topic}', ${questionId});">
+                ${escapeHtml(query)}
+            </button>`;
+        });
+        html += '</div>';
+    }
+    
+    // Key terms
+    if (suggestions.key_terms && suggestions.key_terms.length > 0) {
+        html += '<div class="suggestion-section">';
+        html += '<div class="suggestion-label">Key terms to understand:</div>';
+        html += '<div class="key-terms">';
+        suggestions.key_terms.forEach(term => {
+            html += `<span class="key-term">${escapeHtml(term)}</span>`;
+        });
+        html += '</div></div>';
+    }
+    
+    // Research tips
+    if (suggestions.research_tips && suggestions.research_tips.length > 0) {
+        html += '<div class="suggestion-section">';
+        html += '<div class="suggestion-label">💡 Research tips:</div>';
+        suggestions.research_tips.forEach(tip => {
+            html += `<div class="research-tip">• ${escapeHtml(tip)}</div>`;
+        });
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function generateResultCard(result, index, questionId, topic) {
+    const isRecommended = result.ai_recommended;
+    const hasExplanation = result.ai_explanation && result.ai_explanation.length > 0;
+    
+    let html = `<div class="fact-result-item ${isRecommended ? 'ai-recommended' : ''}" onclick="window.open('${result.url}', '_blank')">`;
+    
+    // Recommended badge
+    if (isRecommended) {
+        html += '<div class="recommended-badge">⭐ AI Recommended</div>';
+    }
+    
+    // Result type indicator
+    const typeIcons = {
+        'news': '📰',
+        'fact': '📊',
+        'overview': '📖'
+    };
+    const icon = typeIcons[result.type] || '📄';
+    
+    html += `<div class="result-header">
+        <span class="result-type-icon">${icon}</span>
+        <span class="result-type">${result.type || 'article'}</span>
+    </div>`;
+    
+    // Title
+    html += `<div class="fact-title">${escapeHtml(result.title)}</div>`;
+    
+    // Excerpt
+    if (result.excerpt) {
+        html += `<div class="fact-excerpt">${escapeHtml(result.excerpt.substring(0, 150))}...</div>`;
+    }
+    
+    // AI Explanation
+    if (hasExplanation) {
+        html += `<div class="ai-explanation">
+            <strong>Why this matters:</strong> ${escapeHtml(result.ai_explanation)}
+        </div>`;
+    }
+    
+    // Bias distribution for Ground News
+    if (result.bias_distribution) {
+        html += `<div class="bias-info">
+            <span class="bias-label">Coverage:</span>
+            <span class="bias-stats">${result.bias_distribution}</span>
+            <span class="perspectives">(${result.perspectives} sources)</span>
+        </div>`;
+    }
+    
+    // Source and date
+    html += `<div class="fact-source">
+        Source: <a href="${result.url}" target="_blank" class="fact-source-link" onclick="event.stopPropagation()">${escapeHtml(result.source)}</a>
+        ${result.date ? ` • ${result.date}` : ''}
+    </div>`;
+    
+    // Save to Notebook button
+    html += `<button class="save-to-notebook-btn" onclick="event.stopPropagation(); saveToNotebook('${escapeHtml(result.title)}', '${result.url}', '${escapeHtml(result.excerpt || '')}', '${topic}')">
+        💾 Save to Notebook
+    </button>`;
+    
+    html += '</div>';
+    return html;
+}
+
+function generateNoResultsHTML(suggestions) {
+    let html = '<div class="search-empty">';
+    html += '<div class="empty-icon">🔍</div>';
+    html += '<div class="empty-title">No results found</div>';
+    
+    if (suggestions && suggestions.better_queries && suggestions.better_queries.length > 0) {
+        html += '<div class="empty-suggestion">Try one of these searches:</div>';
+        suggestions.better_queries.forEach(query => {
+            html += `<div class="suggestion-chip-empty">${escapeHtml(query)}</div>`;
+        });
+    } else {
+        html += '<div class="empty-suggestion">Try different keywords or be more specific</div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function saveToNotebook(title, url, description, topic) {
+    // Show saving indicator
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Saving...';
+    btn.disabled = true;
+    
+    // Send to backend
+    fetch('/notebook/quick-save/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&topic=${topic}&source=survey-search`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            btn.innerHTML = '✅ Saved!';
+            btn.style.background = '#10b981';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.background = '';
+            }, 2000);
+        } else {
+            btn.innerHTML = '❌ Error';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        btn.innerHTML = '❌ Error';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 {% endblock %}
