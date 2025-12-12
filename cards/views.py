@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseRedirect
 from cards.youtube_utils import extract_video_id, get_youtube_transcript, summarize_transcript
-from cards.article_utils import fetch_article_text, summarize_article, is_valid_url
+# Article utils imported inline where needed
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
