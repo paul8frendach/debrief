@@ -81,6 +81,7 @@ urlpatterns = [
     path('notebook/add/', views.add_notebook_entry, name='add_notebook_entry'),
     path('notebook/<int:entry_id>/delete/', views.delete_notebook_entry, name='delete_notebook_entry'),
     path('notebook/<int:entry_id>/', views.notebook_entry_detail, name='notebook_entry_detail'),
+    path('notebook/<int:entry_id>/generate-summary/', views.generate_summary, name='generate_summary'),
     path('notebook/<int:entry_id>/share-to-squad/', views.share_to_squad, name='share_to_squad'),
     path('notebook/<int:entry_id>/regenerate/', views.regenerate_summary, name='regenerate_summary'),
     path('notebook/<int:entry_id>/update-topic/', views.update_entry_topic, name='update_entry_topic'),

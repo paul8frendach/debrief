@@ -2557,3 +2557,44 @@ def delete_squad_digest(request, digest_id):
         digest.delete()
         return JsonResponse({'success': True, 'message': 'Removed from Squad Digest'})
     return JsonResponse({'success': False, 'error': 'POST required'})
+
+
+@login_required
+def generate_summary(request, entry_id):
+    """Generate or regenerate AI summary for article"""
+    if request.method == 'POST':
+        entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+        
+        if entry.entry_type != 'article':
+            return JsonResponse({'success': False, 'error': 'Can only summarize articles'})
+        
+        # Check if API key exists
+        import os
+        if not os.environ.get('ANTHROPIC_API_KEY'):
+            return JsonResponse({'success': False, 'error': 'AI summarization not configured. Please add ANTHROPIC_API_KEY to environment variables.'})
+        
+        try:
+            from .article_utils import ArticleSummarizer
+            summarizer = ArticleSummarizer()
+            summary = summarizer.summarize_article(entry.content)
+            
+            if summary:
+                # Update description with new summary
+                entry.description = f"📝 Auto-summary:\n{summary}"
+                entry.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'summary': summary
+                })
+            else:
+                return JsonResponse({'success': False, 'error': 'Could not generate summary - article may not be accessible'})
+                
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"Summary generation error: {error_detail}")
+            return JsonResponse({'success': False, 'error': f'Error: {str(e)}'})
+    
+    return JsonResponse({'success': False, 'error': 'POST required'})
+

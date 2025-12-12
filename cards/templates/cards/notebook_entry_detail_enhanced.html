@@ -5,7 +5,8 @@
 {% block extra_style %}
 <style>
 body {
-    background: #f3f4f6;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
 }
 
 .notebook-detail-container {
@@ -15,7 +16,9 @@ body {
 }
 
 .detail-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 32px;
     margin-bottom: 40px;
@@ -96,7 +99,8 @@ body {
 }
 
 .video-section {
-    background: white;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -139,7 +143,8 @@ body {
 }
 
 .notes-panel {
-    background: white;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 28px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -151,7 +156,7 @@ body {
 .notes-header {
     font-size: 22px;
     font-weight: 900;
-    color: #1a1a2e;
+    color: white;
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 3px solid #667eea;
@@ -167,13 +172,19 @@ body {
     width: 100%;
     min-height: 100px;
     padding: 16px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     font-size: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
     resize: vertical;
     margin-bottom: 12px;
     font-family: inherit;
     line-height: 1.6;
+}
+
+.note-input::placeholder {
+    color: #6b7280;
 }
 
 .note-input:focus {
@@ -254,7 +265,7 @@ body {
 }
 
 .note-item {
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
     border-left: 4px solid #667eea;
     padding: 16px;
     margin-bottom: 16px;
@@ -293,7 +304,7 @@ body {
 }
 
 .note-text {
-    color: #374151;
+    color: #e5e7eb;
     font-size: 15px;
     line-height: 1.7;
     white-space: pre-wrap;
@@ -307,7 +318,8 @@ body {
 }
 
 .content-section {
-    background: white;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 32px;
     margin-bottom: 32px;
@@ -317,7 +329,7 @@ body {
 .section-title {
     font-size: 20px;
     font-weight: 900;
-    color: #1a1a2e;
+    color: white;
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 3px solid #667eea;
@@ -327,7 +339,7 @@ body {
 }
 
 .section-content {
-    color: #4b5563;
+    color: #d1d5db;
     font-size: 15px;
     line-height: 1.8;
 }
@@ -412,8 +424,23 @@ body {
 
     {% if auto_summary %}
     <div class="content-section">
+        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🤖 AI Summary</span>
+            <button onclick="regenerateSummary()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                🔄 Regenerate
+            </button>
+        </div>
+        <div class="section-content" id="summaryContent">{{ auto_summary|linebreaks }}</div>
+    </div>
+    {% elif entry.entry_type == 'article' %}
+    <div class="content-section">
         <div class="section-title">🤖 AI Summary</div>
-        <div class="section-content">{{ auto_summary|linebreaks }}</div>
+        <div style="text-align: center; padding: 40px;">
+            <p style="color: #9ca3af; margin-bottom: 16px;">No summary yet</p>
+            <button onclick="generateSummary()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                ✨ Generate AI Summary
+            </button>
+        </div>
     </div>
     {% endif %}
 
@@ -423,6 +450,24 @@ body {
         <div class="section-content">{{ remaining_description|linebreaks }}</div>
     </div>
     {% endif %}
+    
+    <div class="content-section">
+        <div class="section-title">📝 Personal Notes</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <textarea id="personalNoteInput" style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 8px; font-size: 14px; resize: vertical; margin-bottom: 10px; background: rgba(255, 255, 255, 0.05); color: white;" placeholder="Add your personal thoughts..."></textarea>
+            <button onclick="addPersonalNote()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                💾 Save Note
+            </button>
+        </div>
+        <div id="personalNotesList">
+            {% for note in notes %}
+            <div style="background: rgba(255, 255, 255, 0.05); border-left: 4px solid #10b981; padding: 16px; margin-bottom: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 14px; color: #e5e7eb; line-height: 1.6; margin-bottom: 8px;">{{ note.text }}</div>
+                <div style="font-size: 12px; color: #9ca3af;">{{ note.created_at|date:"M d, Y g:i A" }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <script>
@@ -605,6 +650,78 @@ function shareToSquad() {
             alert('Network error - please try again');
         });
     }
+}
+
+function generateSummary() {
+    const btn = event.target;
+    btn.innerHTML = '⏳ Generating...';
+    btn.disabled = true;
+    
+    fetch('{% url "generate_summary" entry.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Could not generate summary'));
+            btn.innerHTML = '✨ Generate AI Summary';
+            btn.disabled = false;
+        }
+    });
+}
+
+function regenerateSummary() {
+    if (confirm('Regenerate the AI summary? This will replace the current one.')) {
+        const btn = event.target;
+        btn.innerHTML = '⏳ Regenerating...';
+        btn.disabled = true;
+        
+        fetch('{% url "generate_summary" entry.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Could not regenerate'));
+                btn.innerHTML = '🔄 Regenerate';
+                btn.disabled = false;
+            }
+        });
+    }
+}
+
+function addPersonalNote() {
+    const input = document.getElementById('personalNoteInput');
+    const text = input.value.trim();
+    
+    if (!text) {
+        alert('Please enter a note');
+        return;
+    }
+    
+    fetch('{% url "add_notebook_note" entry.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: 'note_text=' + encodeURIComponent(text)
+    })
+    .then(response => {
+        location.reload();
+    });
 }
 
 function getCookie(name) {
