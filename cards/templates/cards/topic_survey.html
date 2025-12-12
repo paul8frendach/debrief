@@ -998,7 +998,7 @@ function searchFacts(query, topic, questionId) {
     
     // Debounce search
     searchTimeout = setTimeout(() => {
-        fetch(`/api/enhanced-fact-search/?q=${encodeURIComponent(query)}&topic=${topic}`)
+        fetch(`/api/enhanced-fact-search/?q=${encodeURIComponent(query)}&topic=${topic}&question_id=${questionId}`)
             .then(response => response.json())
             .then(data => {
                 displayEnhancedResults(data, questionId, topic);
@@ -1052,6 +1052,22 @@ function displayEnhancedResults(data, questionId, topic) {
     }
     
     let html = '';
+    
+    // Show how many results we're displaying
+    if (data.total_found > data.results.length) {
+        html += `<div class="results-info">
+            <span class="info-icon">✨</span>
+            Showing top ${data.results.length} most relevant results (${data.total_found} found)
+        </div>`;
+    }
+    
+    // Show how many results we're displaying
+    if (data.total_found > data.results.length) {
+        html += `<div class="results-info">
+            <span class="info-icon">✨</span>
+            Showing top ${data.results.length} most relevant results (${data.total_found} found)
+        </div>`;
+    }
     
     // Show AI suggestions if available
     if (data.suggestions && data.query_enhanced) {
@@ -1162,9 +1178,14 @@ function generateResultCard(result, index, questionId, topic) {
     </div>`;
     
     // Save to Notebook button
-    html += `<button class="save-to-notebook-btn" onclick="event.stopPropagation(); saveToNotebook('${escapeHtml(result.title)}', '${result.url}', '${escapeHtml(result.excerpt || '')}', '${topic}')">
-        💾 Save to Notebook
-    </button>`;
+    html += `<div style="display: flex; gap: 8px; margin-top: 8px;">
+        <button class="save-to-notebook-btn" onclick="event.stopPropagation(); saveToNotebook('${escapeHtml(result.title)}', '${result.url}', '${escapeHtml(result.excerpt || '')}', '${topic}', false)" style="flex: 1;">
+            💾 Save
+        </button>
+        <button class="save-to-notebook-btn" onclick="event.stopPropagation(); saveToNotebook('${escapeHtml(result.title)}', '${result.url}', '${escapeHtml(result.excerpt || '')}', '${topic}', true)" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            🤖 + AI
+        </button>
+    </div>`;
     
     html += '</div>';
     return html;
@@ -1188,12 +1209,20 @@ function generateNoResultsHTML(suggestions) {
     return html;
 }
 
-function saveToNotebook(title, url, description, topic) {
+function saveToNotebook(title, url, description, topic, autoSummarize = false) {
     // Show saving indicator
     const btn = event.target;
     const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Saving...';
+    btn.innerHTML = autoSummarize ? '🤖 Saving...' : '💾 Saving...';
     btn.disabled = true;
+    
+    if (autoSummarize) {
+        setTimeout(() => {
+            if (btn.innerHTML.includes('Saving')) {
+                btn.innerHTML = '🤖 Summarizing...';
+            }
+        }, 1000);
+    }
     
     // Send to backend
     fetch('/notebook/quick-save/', {
@@ -1202,7 +1231,7 @@ function saveToNotebook(title, url, description, topic) {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCookie('csrftoken')
         },
-        body: `url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&topic=${topic}&source=survey-search`
+        body: `url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&topic=${topic}&source=survey-search&auto_summarize=${autoSummarize}`
     })
     .then(response => response.json())
     .then(data => {

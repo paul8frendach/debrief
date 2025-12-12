@@ -7,9 +7,14 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('explore/', views.explore, name='explore'),
     path('commons/', views.commons_cards, name='commons'),
+    path('fact-finder/', views.fact_finder, name='fact_finder'),
     path('commons/synthesize/', views.synthesize_public_figure_card, name='synthesize_figure_card'),
     path('topic/<str:topic>/', views.topic_cards, name='topic_cards'),
     path('friends/', views.friends_feed, name='friends_feed'),
+    path('squad-digest/', views.squad_digest, name='squad_digest'),
+    path('squad-digest/<int:digest_id>/', views.squad_digest_detail, name='squad_digest_detail'),
+    path('squad/<int:digest_id>/add-note/', views.add_squad_note, name='add_squad_note'),
+    path('squad/<int:digest_id>/delete/', views.delete_squad_digest, name='delete_squad_digest'),
     
     # Card views
     path('card/<int:card_id>/', views.card_detail, name='card_detail'),
@@ -71,10 +76,12 @@ urlpatterns = [
     # User Settings
     path('settings/', views.user_settings, name='user_settings'),
     path('notebook/', views.notebook, name='notebook'),
+    path('notebook/quick-save/', views.notebook_quick_save_api, name='notebook_quick_save_api'),
     path('quick-save/', views.quick_save, name='quick_save'),
     path('notebook/add/', views.add_notebook_entry, name='add_notebook_entry'),
     path('notebook/<int:entry_id>/delete/', views.delete_notebook_entry, name='delete_notebook_entry'),
     path('notebook/<int:entry_id>/', views.notebook_entry_detail, name='notebook_entry_detail'),
+    path('notebook/<int:entry_id>/share-to-squad/', views.share_to_squad, name='share_to_squad'),
     path('notebook/<int:entry_id>/regenerate/', views.regenerate_summary, name='regenerate_summary'),
     path('notebook/<int:entry_id>/update-topic/', views.update_entry_topic, name='update_entry_topic'),
     path('notebook/<int:entry_id>/update-notes/', views.update_entry_notes, name='update_entry_notes'),

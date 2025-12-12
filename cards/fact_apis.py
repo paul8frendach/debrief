@@ -168,3 +168,41 @@ Format as JSON:
         except Exception as e:
             print(f"AI generation error: {e}")
         return None
+
+
+class DuckDuckGoSearch:
+    """Search DuckDuckGo for current information"""
+    
+    def search(self, query, max_results=5):
+        """Search DuckDuckGo and return results"""
+        try:
+            url = "https://duckduckgo.com/html/"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+            }
+            params = {'q': query}
+            
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                results = []
+                
+                for result in soup.find_all('div', class_='result', limit=max_results):
+                    title_elem = result.find('a', class_='result__a')
+                    snippet_elem = result.find('a', class_='result__snippet')
+                    
+                    if title_elem:
+                        results.append({
+                            'title': title_elem.get_text(),
+                            'url': title_elem.get('href', ''),
+                            'excerpt': snippet_elem.get_text() if snippet_elem else '',
+                            'source': 'DuckDuckGo Search'
+                        })
+                
+                return results
+                
+        except Exception as e:
+            print(f"DuckDuckGo search error: {e}")
+        
+        return []

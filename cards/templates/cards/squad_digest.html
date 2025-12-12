@@ -1,0 +1,557 @@
+{% extends 'cards/base.html' %}
+{% load squad_filters %}
+
+{% block title %}Squad Digest - Debrief{% endblock %}
+
+{% block extra_style %}
+<style>
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.digest-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+.digest-header {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.header-title {
+    font-size: 36px;
+    font-weight: 900;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.header-stats {
+    display: flex;
+    gap: 24px;
+    padding-top: 20px;
+    border-top: 2px solid #f3f4f6;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.stat-icon {
+    font-size: 20px;
+}
+
+.digest-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.digest-item {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s;
+}
+
+.digest-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.digest-item-header {
+    padding: 24px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.sharer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.sharer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.sharer-details {
+    flex: 1;
+}
+
+.sharer-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.share-time {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.digest-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.digest-description {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.digest-video-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0;
+}
+
+@media (max-width: 1024px) {
+    .digest-video-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+.video-player-container {
+    background: #000;
+    position: relative;
+    padding-bottom: 56.25%;
+}
+
+.video-player-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.squad-notes-panel {
+    padding: 24px;
+    background: #fafbfc;
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.notes-header {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.squad-note {
+    background: white;
+    border-left: 3px solid #667eea;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.squad-note:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.squad-note.own-note {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+}
+
+.note-author {
+    font-size: 12px;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.squad-note.own-note .note-author {
+    color: #10b981;
+}
+
+.note-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.note-timestamp-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-family: monospace;
+}
+
+.note-timestamp-badge:hover {
+    background: #5568d3;
+}
+
+.add-note-form {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 2px solid #e5e7eb;
+}
+
+.note-input-small {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    resize: vertical;
+    margin-bottom: 8px;
+}
+
+.note-input-small:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.add-note-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+
+.add-note-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.digest-actions {
+    padding: 16px 24px;
+    background: #f9fafb;
+    border-top: 2px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.view-full-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.view-full-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    background: white;
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+}
+
+.empty-text {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+.empty-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.empty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="digest-container">
+    <div class="digest-header">
+        <h1 class="header-title">🚀 Squad Digest</h1>
+        <p class="header-subtitle">Videos and notes shared by your squad. Watch together, learn together.</p>
+        
+        <div class="header-stats">
+            <div class="stat-item">
+                <span class="stat-icon">👥</span>
+                <span><strong>{{ friend_count }}</strong> squad members</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🎥</span>
+                <span><strong>{{ digests.count }}</strong> shared videos</span>
+            </div>
+        </div>
+    </div>
+
+    {% if digests %}
+    <div class="digest-feed">
+        {% for digest in digests %}
+        <div class="digest-item" onclick="window.location.href='{% url 'squad_digest_detail' digest.id %}'" style="cursor: pointer;">
+            <div class="digest-item-header">
+                <div class="sharer-info">
+                    <div class="sharer-avatar">
+                        {{ digest.shared_by.username.0|upper }}
+                    </div>
+                    <div class="sharer-details">
+                        <div class="sharer-name">
+                            {% if digest.shared_by == user %}
+                                You
+                            {% else %}
+                                {{ digest.shared_by.username }}
+                            {% endif %}
+                            shared a video
+                        </div>
+                        <div class="share-time">{{ digest.shared_at|timesince }} ago</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                    <h3 class="digest-title" style="flex: 1; margin: 0;">{{ digest.notebook_entry.title }}</h3>
+                    {% if digest.shared_by == user %}
+                    <button onclick="event.stopPropagation(); deleteFromFeed({{ digest.id }})" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        🗑️ Remove
+                    </button>
+                    {% endif %}
+                </div>
+                {% if digest.description %}
+                <p class="digest-description">{{ digest.description }}</p>
+                {% endif %}
+            </div>
+
+            {% if digest.notebook_entry.entry_type == 'youtube' %}
+            <div class="digest-video-section">
+                <div class="video-player-container">
+                    <div id="youtubePlayer{{ digest.id }}"></div>
+                </div>
+
+                <div class="squad-notes-panel">
+                    <div class="notes-header">
+                        💬 Squad Notes ({{ digest.squad_notes.count }})
+                    </div>
+                    
+                    <div class="notes-list" id="notesList{{ digest.id }}">
+                        {% for note in digest.squad_notes.all %}
+                        <div class="squad-note {% if note.user == user %}own-note{% endif %}">
+                            <div class="note-author">{{ note.user.username }}</div>
+                            {% if note.timestamp %}
+                            <div class="note-timestamp-badge">⏱️ {{ note.timestamp }}</div>
+                            {% endif %}
+                            <div class="note-text">{{ note.text }}</div>
+                        </div>
+                        {% empty %}
+                        <p style="color: #9ca3af; font-size: 13px; text-align: center; padding: 20px;">
+                            No notes yet. Be the first to add one!
+                        </p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="add-note-form">
+                        <textarea 
+                            id="noteInput{{ digest.id }}"
+                            class="note-input-small" 
+                            placeholder="Add your thoughts..."></textarea>
+                        <button class="add-note-btn" onclick="addSquadNote({{ digest.id }})">
+                            💬 Add Note
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🎥</div>
+        <h2 class="empty-title">No Shared Videos Yet</h2>
+        <p class="empty-text">
+            Share videos from your notebook to start building your Squad Digest!
+        </p>
+        <a href="{% url 'notebook' %}" class="empty-btn">Go to Notebook →</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Load YouTube iframe API
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+var players = {};
+
+function onYouTubeIframeAPIReady() {
+    console.log('YouTube API Ready');
+    // Wait for DOM to be fully ready
+    setTimeout(function() {
+        {% for digest in digests %}
+        {% if digest.youtube_id %}
+        var container = document.getElementById('youtubePlayer{{ digest.id }}');
+        console.log('Container for {{ digest.id }}:', container);
+        if (container) {
+            console.log('Creating player for digest {{ digest.id }}, video: {{ digest.youtube_id }}');
+            players[{{ digest.id }}] = new YT.Player('youtubePlayer{{ digest.id }}', {
+                videoId: '{{ digest.youtube_id }}',
+                playerVars: {
+                    'enablejsapi': 1,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onError': function(event) {
+                        console.error('Player error for digest {{ digest.id }}:', event.data);
+                    }
+                }
+            });
+        } else {
+            console.error('Container not found for digest {{ digest.id }}');
+        }
+        {% endif %}
+        {% endfor %}
+    }, 100);
+}
+
+function addSquadNote(digestId) {
+    const input = document.getElementById('noteInput' + digestId);
+    const text = input.value.trim();
+    
+    if (!text) {
+        alert('Please enter a note');
+        return;
+    }
+    
+    fetch(`/squad/${digestId}/add-note/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `text=${encodeURIComponent(text)}&timestamp=`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show new note
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Could not add note'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error - please try again');
+    });
+}
+
+function deleteFromFeed(digestId) {
+    if (confirm('Remove from Squad Digest?')) {
+        fetch('/squad/' + digestId + '/delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Could not delete'));
+            }
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

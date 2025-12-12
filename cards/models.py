@@ -416,6 +416,7 @@ class NotebookNote(models.Model):
     """Individual notes/points for a notebook entry"""
     entry = models.ForeignKey(NotebookEntry, on_delete=models.CASCADE, related_name='notes')
     text = models.TextField(max_length=1000)
+    timestamp = models.CharField(max_length=10, blank=True, help_text='Video timestamp HH:MM:SS')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -536,3 +537,44 @@ class FactSource(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class SquadDigest(models.Model):
+    """Shared video/content in squad digest for collaborative note-taking"""
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_digests')
+    notebook_entry = models.ForeignKey(NotebookEntry, on_delete=models.CASCADE)
+    shared_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(max_length=500, blank=True, help_text='Why you are sharing this')
+    
+    class Meta:
+        ordering = ['-shared_at']
+        unique_together = ['shared_by', 'notebook_entry']
+    
+    def __str__(self):
+        return f"{self.shared_by.username} shared {self.notebook_entry.title}"
+
+
+class SquadDigestNote(models.Model):
+    """Individual notes on squad digest content from different users"""
+    digest = models.ForeignKey(SquadDigest, on_delete=models.CASCADE, related_name='squad_notes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(max_length=1000)
+    timestamp = models.CharField(max_length=10, blank=True, help_text='Video timestamp HH:MM:SS')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.user.username}'s note on {self.digest}"
+
+
+class UserProfile(models.Model):
+    """Extended user profile with online status"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+

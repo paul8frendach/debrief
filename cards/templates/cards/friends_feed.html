@@ -1,260 +1,514 @@
 {% extends 'cards/base.html' %}
 
-{% block title %}Friends Feed - Debrief{% endblock %}
+{% block title %}Friends - Debrief{% endblock %}
 {% block nav_friends %}active{% endblock %}
 
 {% block extra_style %}
-.feed-header {
+<style>
+body {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-radius: 16px;
-    padding: 32px;
-    margin-bottom: 32px;
-    border: 1px solid rgba(255,255,255,0.1);
+    min-height: 100vh;
+}
+
+.friends-container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 24px;
+}
+
+.page-header {
     text-align: center;
+    margin-bottom: 40px;
 }
 
-.feed-title {
-    font-size: 32px;
-    font-weight: 800;
+.page-title {
+    font-size: 42px;
+    font-weight: 900;
     color: white;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
-.feed-subtitle {
-    font-size: 14px;
+.page-subtitle {
+    font-size: 16px;
     color: #a0a0c0;
 }
 
-.card-grid {
+/* Three Column Layout */
+.friends-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    margin-bottom: 40px;
 }
 
-.card-preview {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-radius: 16px;
-    padding: 24px;
+@media (max-width: 1200px) {
+    .friends-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tool-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-radius: 20px;
+    padding: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s;
-    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
     position: relative;
     overflow: hidden;
 }
 
-.card-preview::before {
+.tool-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 4px;
+}
+
+.tool-card.squad-digest {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.tool-card.squad-digest::before {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.tool-card.friends-cards {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.tool-card.friends-cards::before {
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }
 
-.card-preview:hover {
+.tool-card.find-friends {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.tool-card.find-friends::before {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.tool-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
-    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-.card-badges {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.card-badge {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.scope-federal {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.scope-state {
-    background: rgba(251, 191, 36, 0.2);
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.badge-public {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.badge-friends {
-    background: rgba(102, 126, 234, 0.2);
-    color: #a0b5ff;
-    border: 1px solid rgba(102, 126, 234, 0.3);
-}
-
-.preview-topic {
-    font-size: 11px;
-    color: #667eea;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
-    font-weight: 700;
-}
-
-.preview-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 12px;
-    line-height: 1.3;
-}
-
-.preview-title a {
-    color: white;
-    text-decoration: none;
-}
-
-.preview-title a:hover {
-    color: #a0b5ff;
-}
-
-.preview-snippet {
-    font-size: 14px;
-    color: #b0b0c0;
-    line-height: 1.6;
+.tool-icon {
+    font-size: 48px;
     margin-bottom: 16px;
 }
 
-.preview-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-.preview-meta {
-    font-size: 12px;
-    color: #808090;
-}
-
-.preview-author {
-    color: #667eea;
-    text-decoration: none;
-}
-
-.preview-author:hover {
-    text-decoration: underline;
-}
-
-.preview-stats {
-    display: flex;
-    gap: 16px;
-    font-size: 13px;
-    color: #a0a0c0;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.empty-icon {
-    font-size: 64px;
-    margin-bottom: 24px;
-    opacity: 0.5;
-}
-
-.empty-title {
+.tool-title {
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 900;
     color: white;
     margin-bottom: 12px;
 }
 
-.empty-subtitle {
+.tool-description {
     font-size: 14px;
     color: #a0a0c0;
-    margin-bottom: 24px;
+    line-height: 1.6;
+    margin-bottom: 20px;
 }
 
-.btn {
-    padding: 14px 32px;
+.tool-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    font-size: 13px;
+    color: #d0d0e0;
+}
+
+.stat-number {
+    font-weight: 700;
+    color: white;
+    font-size: 18px;
+}
+
+.tool-action {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 24px;
     border-radius: 10px;
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 700;
+    font-size: 14px;
     text-decoration: none;
-    transition: all 0.2s;
     display: inline-block;
+    transition: all 0.2s;
+}
+
+.tool-action:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Search Section */
+.search-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-radius: 20px;
+    padding: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 32px;
+}
+
+.search-header {
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.search-box {
+    display: flex;
+    gap: 12px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-input::placeholder {
+    color: #6b7280;
+}
+
+.search-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.btn:hover {
+.search-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-@media (max-width: 768px) {
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
+.search-results {
+    margin-top: 24px;
+    display: none;
 }
+
+.search-results.active {
+    display: block;
+}
+
+.result-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+}
+
+.result-name {
+    color: white;
+    font-weight: 600;
+}
+
+.add-friend-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.add-friend-btn:hover {
+    background: #059669;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="feed-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h1 class="feed-title" style="margin: 0;">Friends Feed</h1>
-            <a href="{% url 'find_friends' %}" class="btn" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">+ Find Friends</a>
-        </div>
-        <p class="feed-subtitle">Cards from {{ following_count }} people you follow</p>
+<div class="friends-container">
+    <div class="page-header">
+        <h1 class="page-title">👥 Friends Hub</h1>
+        <p class="page-subtitle">Connect, collaborate, and share knowledge with your network</p>
     </div>
 
-    {% if cards %}
-    <div class="card-grid">
-        {% for card in cards %}
-        <a href="{% url 'card_detail' card.id %}" class="card-preview" style="text-decoration: none; color: inherit; display: block;">
-            <div class="card-badges">
-                <span class="card-badge scope-{{ card.scope }}">
-                    {% if card.scope == 'federal' %}🏛️ Federal{% else %}📍 State{% endif %}
-                </span>
-                <span class="card-badge badge-{{ card.visibility }}">
-                    {% if card.visibility == 'public' %}🌍 Public{% else %}👥 Friends{% endif %}
-                </span>
-            </div>
-            
-            <div class="preview-topic">{{ card.get_topic_display }}{% if card.subcategory %} → {{ card.subcategory }}{% endif %}</div>
-            <div class="preview-title">{{ card.title }}</div>
-            <div class="preview-snippet">
-                {{ card.hypothesis|truncatewords:20 }}
-            </div>
-            <div class="preview-footer">
-                <span class="preview-meta">
-                    By <span class="preview-author">@{{ card.user.username }}</span> • {{ card.created_at|timesince }} ago
-                </span>
-                <div class="preview-stats">
-                    <span>💾 {{ card.saves.count }}</span>
-                    <span>📊 {{ card.arguments.count }}</span>
+    <!-- Search for Friends -->
+    <div class="search-section">
+        <h2 class="search-header">🔍 Find Friends</h2>
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input" 
+                placeholder="Search by username..."
+                onkeypress="if(event.key==='Enter') searchFriends()">
+            <button class="search-btn" onclick="searchFriends()">Search</button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <!-- Three Main Tools -->
+    <div class="friends-grid">
+        <!-- Squad Digest -->
+        <div class="tool-card squad-digest" onclick="window.location.href='{% url 'squad_digest' %}'">
+            <div class="tool-icon">🚀</div>
+            <h3 class="tool-title">Squad Digest</h3>
+            <p class="tool-description">
+                Watch and learn together. Share videos with notes, collaborate with your squad.
+            </p>
+            <div class="tool-stats">
+                <div class="stat-item">
+                    <div class="stat-number">📺</div>
+                    Shared Videos
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">💬</div>
+                    Squad Notes
                 </div>
             </div>
-        </a>
-        {% endfor %}
+            <a href="{% url 'squad_digest' %}" class="tool-action" onclick="event.stopPropagation()">
+                View Squad Digest →
+            </a>
+        </div>
+
+        <!-- Friends Cards Feed -->
+        <div class="tool-card friends-cards" onclick="showFeedSection()">
+            <div class="tool-icon">📋</div>
+            <h3 class="tool-title">Friends' Cards</h3>
+            <p class="tool-description">
+                See what your network is debating. Explore cards from people you follow.
+            </p>
+            <div class="tool-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ cards.count }}</div>
+                    Cards
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ following_count }}</div>
+                    Following
+                </div>
+            </div>
+            <button class="tool-action" onclick="event.stopPropagation(); showFeedSection()">
+                Browse Feed →
+            </button>
+        </div>
+
+        <!-- Find Friends -->
+        <div class="tool-card find-friends" onclick="window.location.href='{% url 'find_friends' %}'">
+            <div class="tool-icon">🔎</div>
+            <h3 class="tool-title">Discover People</h3>
+            <p class="tool-description">
+                Expand your network. Find users with similar interests and debates.
+            </p>
+            <div class="tool-stats">
+                <div class="stat-item">
+                    <div class="stat-number">✨</div>
+                    Discover
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">🤝</div>
+                    Connect
+                </div>
+            </div>
+            <a href="{% url 'find_friends' %}" class="tool-action" onclick="event.stopPropagation()">
+                Find Friends →
+            </a>
+        </div>
     </div>
-    {% else %}
-    <div class="empty-state">
-        <div class="empty-icon">👥</div>
-        <div class="empty-title">No Cards From Friends Yet</div>
-        <div class="empty-subtitle">Follow other users to see their cards here, or they haven't created any cards yet</div>
-        <a href="{% url 'explore' %}" class="btn">Discover Users to Follow</a>
+
+    <!-- Friends Cards Section (Hidden by default) -->
+    <div id="feedSection" style="display: none;">
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 20px; padding: 32px; border: 2px solid rgba(102, 126, 234, 0.3); margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 28px; font-weight: 900; color: white; margin: 0;">📋 Friends' Cards</h2>
+                <button onclick="hideFeedSection()" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    ← Back to Hub
+                </button>
+            </div>
+            
+            {% if cards %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 24px;">
+                {% for card in cards %}
+                <a href="{% url 'card_detail' card.id %}" style="text-decoration: none;">
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(22, 33, 62, 0.8) 100%); border-radius: 16px; padding: 24px; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
+                        
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; background: rgba(102, 126, 234, 0.2); color: #a0b5ff; border: 1px solid rgba(102, 126, 234, 0.3);">
+                                {{ card.get_topic_display }}
+                            </span>
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                {% if card.visibility == 'public' %}🌍 Public{% else %}👥 Friends{% endif %}
+                            </span>
+                        </div>
+                        
+                        <h3 style="font-size: 18px; font-weight: 800; color: white; margin-bottom: 12px;">
+                            {{ card.title }}
+                        </h3>
+                        
+                        <p style="font-size: 14px; color: #a0a0c0; margin-bottom: 16px; line-height: 1.6;">
+                            {{ card.claim|truncatewords:20 }}
+                        </p>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <span style="font-size: 12px; color: #667eea; font-weight: 600;">
+                                By {{ card.user.username }}
+                            </span>
+                            <span style="font-size: 11px; color: #6b7280;">
+                                {{ card.created_at|timesince }} ago
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 60px 20px; color: #a0a0c0;">
+                <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                <p style="font-size: 18px; margin-bottom: 12px; color: white;">No cards yet from friends</p>
+                <p style="font-size: 14px;">Follow more people to see their cards here!</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
 </div>
+
+<script>
+function showFeedSection() {
+    document.getElementById('feedSection').style.display = 'block';
+    document.getElementById('feedSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideFeedSection() {
+    document.getElementById('feedSection').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function searchFriends() {
+    const query = document.getElementById('searchInput').value.trim();
+    
+    if (!query) {
+        alert('Please enter a username to search');
+        return;
+    }
+    
+    fetch('/api/search-friends/?q=' + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+            displayResults(data.users);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Search failed. Please try again.');
+        });
+}
+
+function displayResults(users) {
+    const resultsDiv = document.getElementById('searchResults');
+    
+    if (users.length === 0) {
+        resultsDiv.innerHTML = '<p style="color: #a0a0c0; text-align: center; padding: 20px;">No users found</p>';
+        resultsDiv.classList.add('active');
+        return;
+    }
+    
+    let html = '';
+    users.forEach(user => {
+        html += `
+            <div class="result-item">
+                <div class="result-user">
+                    <div class="result-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                    <div class="result-name">${user.username}</div>
+                </div>
+                <button class="add-friend-btn" onclick="addFriend(${user.id}, this)">
+                    + Add Friend
+                </button>
+            </div>
+        `;
+    });
+    
+    resultsDiv.innerHTML = html;
+    resultsDiv.classList.add('active');
+}
+
+function addFriend(userId, button) {
+    fetch('/api/send-friend-request/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: 'to_user_id=' + userId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.textContent = '✓ Sent';
+            button.disabled = true;
+            button.style.background = '#6b7280';
+        } else {
+            alert('Error: ' + (data.error || 'Could not send request'));
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 {% endblock %}

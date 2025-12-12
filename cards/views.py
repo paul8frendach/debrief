@@ -1371,6 +1371,22 @@ def notebook_entry_detail(request, entry_id):
     """View detailed notebook entry"""
     entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
     
+    # Extract YouTube video ID if it's a YouTube link
+    youtube_id = None
+    if entry.entry_type == 'youtube' or 'youtube.com' in entry.content or 'youtu.be' in entry.content:
+        import re
+        # Match various YouTube URL formats (handles &t= and other params)
+        patterns = [
+            r'(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})',  # watch?v=ID&...
+            r'(?:youtu\.be\/)([a-zA-Z0-9_-]{11})',  # youtu.be/ID
+            r'youtube\.com\/embed\/([a-zA-Z0-9_-]{11})',  # embed/ID
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, entry.content)
+            if match:
+                youtube_id = match.group(1)
+                break
+    
     # Parse auto-summary from description
     auto_summary = None
     remaining_description = entry.description
@@ -1416,9 +1432,10 @@ def notebook_entry_detail(request, entry_id):
         'tags': tags,
         'topics': NotebookEntry.NOTEBOOK_TOPICS,
         'notes': notes,
+        'youtube_id': youtube_id,
     }
     
-    return render(request, 'cards/notebook_entry_detail.html', context)
+    return render(request, 'cards/notebook_entry_detail_enhanced.html', context)
 
 
 @login_required
@@ -1546,13 +1563,34 @@ def add_notebook_note(request, entry_id):
     
     if request.method == 'POST':
         note_text = request.POST.get('note_text', '').strip()
-        if note_text:
-            NotebookNote.objects.create(
+        note_content = request.POST.get('content', '').strip()  # From AJAX
+        timestamp = request.POST.get('timestamp', '').strip()
+        
+        # Use whichever field has content
+        text = note_text or note_content
+        
+        if text:
+            note = NotebookNote.objects.create(
                 entry=entry,
-                text=note_text
+                text=text,
+                timestamp=timestamp if timestamp else ''
             )
+            
+            # Return JSON for AJAX requests
+            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded' and not note_text:
+                return JsonResponse({
+                    'success': True,
+                    'note_id': note.id,
+                    'timestamp': note.timestamp or '',
+                    'text': note.text,
+                    'created_at': note.created_at.strftime('%b %d, %Y %I:%M %p')
+                })
+            
             messages.success(request, "✅ Note added!")
         else:
+            # Return error for AJAX
+            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded' and not note_text:
+                return JsonResponse({'success': False, 'error': 'Note cannot be empty'})
             messages.error(request, "Note cannot be empty.")
     
     return redirect('notebook_entry_detail', entry_id=entry.id)
@@ -2025,79 +2063,497 @@ def enhanced_fact_search(request):
     """AI-enhanced fact search with Ground News integration"""
     query = request.GET.get('q', '')
     topic = request.GET.get('topic', '')
+    question_id = request.GET.get('question_id', '')
     
     if not query:
-        return JsonResponse({'results': [], 'suggestions': []})
+        return JsonResponse({'results': [], 'suggestions': {}})
     
     from .fact_apis import FactFetcher
-    from .ground_news_api import GroundNewsAPI
-    from .ai_search_helper import AISearchHelper
+    from django.db.models import Q, Count, Case, When, IntegerField
     
     results = []
     suggestions = {}
     
-    # Get AI enhancements
-    ai_helper = AISearchHelper()
-    enhanced = ai_helper.enhance_query(query, topic)
+    # Get facts already shown in context to avoid duplicates
+    shown_facts = []
+    if question_id:
+        try:
+            question = SurveyQuestion.objects.get(id=question_id)
+            if question.context_stats:
+                shown_facts = [line.strip() for line in question.context_stats.split('\n') if line.strip()]
+        except:
+            pass
     
-    if enhanced:
-        suggestions = {
-            'better_queries': enhanced.get('search_queries', []),
-            'research_tips': enhanced.get('research_suggestions', []),
-            'key_terms': enhanced.get('key_terms', [])
-        }
+    # Split query into words for smart matching
+    words = [w.lower() for w in query.split() if len(w) > 2]
     
-    # Search Ground News
-    ground_news = GroundNewsAPI()
-    news_results = ground_news.search_stories(query)
+    # Build query - match ANY word
+    db_query = Q()
+    for word in words:
+        db_query |= Q(fact_text__icontains=word)
     
-    if news_results:
-        for story in news_results:
-            results.append({
-                'title': story['title'],
-                'excerpt': story['excerpt'],
-                'url': story['url'],
-                'source': 'Ground News',
-                'date': story['date'],
-                'bias_distribution': f"{story['bias_info']['left_sources']}L / {story['bias_info']['center_sources']}C / {story['bias_info']['right_sources']}R",
-                'perspectives': story['perspectives'],
-                'type': 'news'
-            })
-    
-    # Search database facts
-    db_facts = PolicyFact.objects.filter(fact_text__icontains=query)
+    # Get database facts
+    db_facts = PolicyFact.objects.filter(db_query)
     if topic:
         db_facts = db_facts.filter(topic=topic)
     
-    for fact in db_facts[:5]:
-        results.append({
-            'title': fact.fact_text[:100],
-            'url': fact.source_url,
-            'source': fact.source_name,
-            'date': fact.date_published.strftime('%Y-%m-%d') if fact.date_published else None,
-            'type': 'fact'
-        })
+    # Score by relevance - count how many query words match
+    db_facts = db_facts.annotate(
+        match_score=Count(
+            Case(
+                *[When(fact_text__icontains=word, then=1) for word in words],
+                output_field=IntegerField()
+            )
+        )
+    ).order_by('-match_score', '-relevance_score')[:10]
     
-    # Original fact APIs
-    fetcher = FactFetcher()
+    # Filter out facts already shown
+    for fact in db_facts:
+        fact_preview = fact.fact_text[:80]
+        is_duplicate = any(fact_preview in shown for shown in shown_facts)
+        
+        if not is_duplicate:
+            results.append({
+                'title': fact.fact_text,
+                'url': fact.source_url,
+                'source': fact.source_name,
+                'date': fact.date_published.strftime('%Y-%m-%d') if fact.date_published else None,
+                'type': 'fact',
+                'excerpt': '',
+                'ai_recommended': fact.match_score >= len(words) / 2,  # Matches 50%+ of query words
+                'ai_explanation': f'Matches {fact.match_score} of {len(words)} search terms' if fact.match_score > 1 else ''
+            })
     
-    # Wikipedia overview
-    wiki_summary = fetcher.fetch_wikipedia_summary(query)
-    if wiki_summary:
-        results.append({
-            'title': f'Overview: {query}',
-            'excerpt': wiki_summary,
-            'url': f'https://en.wikipedia.org/wiki/{query.replace(" ", "_")}',
-            'source': 'Wikipedia',
-            'type': 'overview'
-        })
+    # Only fetch external sources if we need more results
+    if len(results) < 5:
+        from .fact_apis import DuckDuckGoSearch
+        
+        # Try DuckDuckGo for current information
+        try:
+            ddg = DuckDuckGoSearch()
+            # Make query more specific for better results
+            search_query = f"{query} statistics research study"
+            ddg_results = ddg.search(search_query, max_results=3)
+            
+            for result in ddg_results:
+                # Filter for credible sources
+                credible_domains = ['gov', 'edu', '.org', 'reuters', 'apnews', 'pewresearch']
+                is_credible = any(domain in result['url'].lower() for domain in credible_domains)
+                
+                if is_credible:
+                    results.append({
+                        'title': result['title'],
+                        'url': result['url'],
+                        'source': result['url'].split('/')[2] if '/' in result['url'] else 'Web',
+                        'excerpt': result['excerpt'],
+                        'type': 'web-search',
+                        'ai_recommended': is_credible,
+                        'ai_explanation': 'Current information from credible source'
+                    })
+        except Exception as e:
+            print(f"DuckDuckGo error: {e}")
+        
+        fetcher = FactFetcher()
+        
+        # FactCheck.org - great for controversial claims
+        try:
+            factcheck_results = fetcher.search_fact_check_org(query)
+            for result in factcheck_results[:3]:
+                results.append({
+                    'title': result.get('title', ''),
+                    'url': result.get('url', ''),
+                    'source': 'FactCheck.org',
+                    'excerpt': result.get('excerpt', ''),
+                    'type': 'fact-check',
+                    'ai_recommended': True,
+                    'ai_explanation': 'Independent fact-checking of claims'
+                })
+        except Exception as e:
+            print(f"FactCheck error: {e}")
+        
+        # Pew Research - for statistics and studies
+        try:
+            pew_results = fetcher.search_pew_research(query)
+            for item in pew_results[:2]:
+                results.append({
+                    'title': item.get('title', ''),
+                    'url': item.get('url', ''),
+                    'source': 'Pew Research Center',
+                    'type': 'study',
+                    'excerpt': '',
+                    'ai_recommended': True,
+                    'ai_explanation': 'Nonpartisan research and polling'
+                })
+        except Exception as e:
+            print(f"Pew Research error: {e}")
     
-    # Use AI to curate and rank results
-    if results:
-        results = ai_helper.curate_results(query, results, topic)
+    # Add Wikipedia only if very few results
+    if len(results) < 2:
+        try:
+            fetcher = FactFetcher()
+            wiki_summary = fetcher.fetch_wikipedia_summary(query)
+            if wiki_summary:
+                results.append({
+                    'title': f'Overview: {query}',
+                    'excerpt': wiki_summary,
+                    'url': f'https://en.wikipedia.org/wiki/{query.replace(" ", "_")}',
+                    'source': 'Wikipedia',
+                    'type': 'overview',
+                    'ai_recommended': False
+                })
+        except Exception as e:
+            print(f"Wikipedia error: {e}")
+    
+    # Generate AI suggestions for better searches
+    if len(results) < 2 or len(query) < 10:
+        suggestions = {
+            'better_queries': generate_better_queries(query, topic),
+            'research_tips': [
+                f'Try searching for specific statistics about {topic}',
+                'Look for sources with recent data (last 2-3 years)',
+                'Compare perspectives from different political viewpoints'
+            ],
+            'key_terms': extract_key_terms(query, topic)
+        }
+    
+    # Filter to only show AI-recommended results (top 3)
+    recommended_results = [r for r in results if r.get('ai_recommended', False)]
+    
+    # If we have recommended results, only show those (max 3)
+    if recommended_results:
+        final_results = recommended_results[:3]
+    else:
+        # Fallback: show top 3 results even if not AI-recommended
+        final_results = results[:3]
     
     return JsonResponse({
-        'results': results[:15],
+        'results': final_results,
         'suggestions': suggestions,
-        'query_enhanced': bool(enhanced)
+        'query_enhanced': len(suggestions) > 0,
+        'total_found': len(results)  # Let them know how many we found
     })
+
+def generate_better_queries(query, topic):
+    """Generate better search queries based on user input"""
+    queries = []
+    
+    # Topic-specific suggestions
+    if topic == 'immigration':
+        if 'crime' in query.lower():
+            queries = [
+                'immigrant crime rates statistics',
+                'undocumented immigrants criminal activity data',
+                'immigration and public safety research'
+            ]
+        elif 'economic' in query.lower() or 'job' in query.lower():
+            queries = [
+                'economic impact of immigration',
+                'immigrant workforce contributions',
+                'immigration effect on wages'
+            ]
+        elif 'border' in query.lower():
+            queries = [
+                'border security effectiveness',
+                'border crossing statistics',
+                'immigration enforcement costs'
+            ]
+        else:
+            queries = [
+                f'{topic} statistics',
+                f'{topic} research studies',
+                f'{topic} economic impact'
+            ]
+    
+    return queries[:3]
+
+def extract_key_terms(query, topic):
+    """Extract key terms to help user understand topic"""
+    terms = {
+        'immigration': ['undocumented', 'visa', 'asylum', 'deportation', 'border security', 'naturalization'],
+        'healthcare': ['single-payer', 'medicare', 'medicaid', 'ACA', 'insurance mandate'],
+        'economy': ['GDP', 'unemployment', 'inflation', 'deficit', 'trade balance']
+    }
+    
+    return terms.get(topic, [])[:4]
+
+
+def fact_finder(request):
+    """Standalone fact finder tool in Commons"""
+    # Get all available topics from Card choices
+    federal_topics = [
+        ('immigration', 'Immigration Policy'),
+        ('foreign_policy', 'Foreign Policy'),
+        ('defense', 'Military & Defense'),
+        ('healthcare', 'Healthcare Reform'),
+        ('tax_policy', 'Tax Policy'),
+        ('social_security', 'Social Security'),
+        ('gun_control', 'Gun Control'),
+        ('trade', 'Trade Policy'),
+        ('climate_change', 'Climate Change Policy'),
+    ]
+    
+    state_topics = [
+        ('education', 'Education Funding'),
+        ('criminal_justice', 'Criminal Justice Reform'),
+        ('drug_policy', 'Drug Policy'),
+        ('voting_rights', 'Voting Rights'),
+        ('housing', 'Housing Policy'),
+        ('transportation', 'Transportation'),
+        ('abortion', 'Abortion Access'),
+        ('police_reform', 'Police Reform'),
+    ]
+    
+    context = {
+        'federal_topics': federal_topics,
+        'state_topics': state_topics,
+    }
+    
+    return render(request, 'cards/fact_finder.html', context)
+
+
+@login_required
+def notebook_quick_save_api(request):
+    """API endpoint to quick save to notebook from fact finder or bookmarklet"""
+    if request.method == 'POST':
+        url = request.POST.get('url', '')
+        title = request.POST.get('title', '')
+        description = request.POST.get('description', '')
+        topic = request.POST.get('topic', 'general')
+        source = request.POST.get('source', 'quick-save')
+        
+        if not url:
+            return JsonResponse({'success': False, 'error': 'URL required'})
+        
+        # Determine entry type based on URL
+        entry_type = 'article'
+        if 'youtube.com' in url or 'youtu.be' in url:
+            entry_type = 'video'
+        
+        # Create notebook entry
+        try:
+            entry = NotebookEntry.objects.create(
+                user=request.user,
+                title=title or url,
+                content=url,  # URL goes in content field
+                description=description or '',  # Will be updated with summary
+                topic=topic,
+                entry_type=entry_type,
+                stance='neutral',  # Default stance
+                tags=f'{source},{topic}' if source != 'quick-save' else topic
+            )
+            
+            # Auto-summarize only if explicitly requested
+            auto_summarize = request.POST.get('auto_summarize', 'false') == 'true'
+            if entry_type == 'article' and not description and auto_summarize:
+                try:
+                    from .article_utils import ArticleSummarizer
+                    summarizer = ArticleSummarizer()
+                    summary = summarizer.summarize_article(url)
+                    
+                    if summary:
+                        entry.description = f"📝 Auto-summary:\n{summary}"
+                        entry.save()
+                except Exception as e:
+                    print(f"Summarization failed: {e}")
+                    # Continue anyway - entry is saved without summary
+            
+            return JsonResponse({
+                'success': True,
+                'entry_id': entry.id,
+                'notebook_url': f'/notebook/?topic={topic}',
+                'message': f'Saved to notebook under {topic}'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'POST required'})
+
+
+@login_required
+def share_to_squad(request, entry_id):
+    """Share a notebook entry to squad digest"""
+    if request.method == 'POST':
+        entry = get_object_or_404(NotebookEntry, id=entry_id, user=request.user)
+        description = request.POST.get('description', '')
+        
+        # Check if already shared
+        from .models import SquadDigest
+        existing = SquadDigest.objects.filter(
+            shared_by=request.user,
+            notebook_entry=entry
+        ).first()
+        
+        if existing:
+            return JsonResponse({'success': False, 'error': 'Already shared to squad'})
+        
+        # Create squad digest entry
+        digest = SquadDigest.objects.create(
+            shared_by=request.user,
+            notebook_entry=entry,
+            description=description
+        )
+        
+        # Notify all friends
+        from django.db.models import Q
+        friendships = FriendRequest.objects.filter(
+            Q(from_user=request.user) | Q(to_user=request.user),
+            status='accepted'
+        )
+        
+        friend_count = 0
+        for friendship in friendships:
+            friend = friendship.to_user if friendship.from_user == request.user else friendship.from_user
+            Notification.objects.create(
+                recipient=friend,
+                sender=request.user,
+                notification_type='squad_share',
+                message=f"{request.user.username} shared a video to Squad Digest: {entry.title}"
+            )
+            friend_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'digest_id': digest.id,
+            'message': f'Shared to {friend_count} friends'
+        })
+    
+    return JsonResponse({'success': False, 'error': 'POST required'})
+
+
+@login_required
+def squad_digest(request):
+    """View squad digest - shared content from friends"""
+    from django.db.models import Q
+    from .models import SquadDigest
+    
+    # Get user's friends
+    friendships = FriendRequest.objects.filter(
+        Q(from_user=request.user) | Q(to_user=request.user),
+        status='accepted'
+    )
+    
+    friend_ids = []
+    for friendship in friendships:
+        friend = friendship.to_user if friendship.from_user == request.user else friendship.from_user
+        friend_ids.append(friend.id)
+    
+    # Get digests shared by friends + user's own shares
+    digests = SquadDigest.objects.filter(
+        Q(shared_by__id__in=friend_ids) | Q(shared_by=request.user)
+    ).select_related('shared_by', 'notebook_entry').prefetch_related('squad_notes')
+    
+    # Extract YouTube IDs for each digest
+    import re
+    for digest in digests:
+        if digest.notebook_entry.entry_type == 'youtube':
+            patterns = [
+                r'(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})',
+                r'(?:youtu\.be\/)([a-zA-Z0-9_-]{11})',
+                r'youtube\.com\/embed\/([a-zA-Z0-9_-]{11})',
+            ]
+            youtube_id = None
+            for pattern in patterns:
+                match = re.search(pattern, digest.notebook_entry.content)
+                if match:
+                    youtube_id = match.group(1)
+                    break
+            digest.youtube_id = youtube_id
+            print(f"DEBUG: Set youtube_id={youtube_id} for {digest.notebook_entry.title}")
+    
+    context = {
+        'digests': digests,
+        'friend_count': len(friend_ids),
+    }
+    
+    return render(request, 'cards/squad_digest.html', context)
+
+
+
+
+@login_required
+def squad_digest_detail(request, digest_id):
+    """View detailed squad digest with full notes"""
+    from .models import SquadDigest
+    digest = get_object_or_404(SquadDigest, id=digest_id)
+    
+    # Extract YouTube ID
+    import re
+    youtube_id = None
+    if digest.notebook_entry.entry_type == 'youtube':
+        patterns = [
+            r'(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})',
+            r'(?:youtu\.be\/)([a-zA-Z0-9_-]{11})',
+            r'youtube\.com\/embed\/([a-zA-Z0-9_-]{11})',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, digest.notebook_entry.content)
+            if match:
+                youtube_id = match.group(1)
+                break
+    
+    notes = digest.squad_notes.all().order_by('created_at')
+    
+    context = {
+        'digest': digest,
+        'youtube_id': youtube_id,
+        'notes': notes,
+    }
+    
+    return render(request, 'cards/squad_digest_detail.html', context)
+
+
+@login_required  
+def add_squad_note(request, digest_id):
+    """Add a note to squad digest content"""
+    if request.method == 'POST':
+        from .models import SquadDigest, SquadDigestNote
+        digest = get_object_or_404(SquadDigest, id=digest_id)
+        text = request.POST.get('text', '').strip()
+        timestamp = request.POST.get('timestamp', '').strip()
+        
+        if text:
+            note = SquadDigestNote.objects.create(
+                digest=digest,
+                user=request.user,
+                text=text,
+                timestamp=timestamp
+            )
+            
+            # Notify the person who shared it (if not yourself)
+            if digest.shared_by != request.user:
+                Notification.objects.create(
+                    recipient=digest.shared_by,
+                    sender=request.user,
+                    notification_type='squad_note',
+                    message=f"{request.user.username} added a note to your shared video"
+                )
+            
+            return JsonResponse({
+                'success': True,
+                'note': {
+                    'id': note.id,
+                    'user': request.user.username,
+                    'text': note.text,
+                    'timestamp': note.timestamp,
+                    'created_at': note.created_at.strftime('%b %d, %Y %I:%M %p')
+                }
+            })
+        
+        return JsonResponse({'success': False, 'error': 'Text required'})
+    
+    return JsonResponse({'success': False, 'error': 'POST required'})
+
+
+
+@login_required
+def delete_squad_digest(request, digest_id):
+    """Delete a squad digest post (only if you shared it)"""
+    if request.method == 'POST':
+        from .models import SquadDigest
+        digest = get_object_or_404(SquadDigest, id=digest_id, shared_by=request.user)
+        digest.delete()
+        return JsonResponse({'success': True, 'message': 'Removed from Squad Digest'})
+    return JsonResponse({'success': False, 'error': 'POST required'})
