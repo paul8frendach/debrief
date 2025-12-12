@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: debrief
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python manage.py shell -c "from django.contrib.auth.models import User; from cards.models import UserProfile; [UserProfile.objects.get_or_create(user=u) for u in User.objects.all()]"
+    startCommand: gunicorn debrief.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DEBUG
+        value: False
